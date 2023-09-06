@@ -1,0 +1,52 @@
+
+
+jasypt:
+  encryptor:
+    password: projectbigtree
+
+spring:
+  data:
+    mongodb:
+      uri: mongodb+srv://productsuser:productspassword@cluster0.wzm30.gcp.mongodb.net/?retryWrites=true&w=majority
+      database: test
+  mail:
+    default-encoding: UTF-8
+    host: smtp.aol.com
+    username: bigtree.tech@aol.com
+    password: Dish00m123
+    port: 587
+    debug: true
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    protocol: smtp
+    test-connection: false
+
+# Enable or disable Swagger UI
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+application:
+  send-email-confirmation: false
+
+smtp:
+  server: ${SMTP_SERVER:smtp.aol.com}
+  username: bigtree.tech@aol/com
+  password: Dish00m123
+  debug: true
+
+stripe:
+  private:
+    key: ${STRIPE_SECRET_KEY:sk_test_51Nk2lYJtRMxkXWc3nCeNwbINNlGdHL1wwtxEBV9Iv5dNIr2oDuZ5DKxwvDSjZeK8BxoJUyx9yTHPy3k76G74Nrcm00S5L0HDHZ}
+  success:
+    url: ${STRIPE_SUCCESS_URL:http://localhost:4200/checkout/success}
+  cancel:
+    url: ${STRIPE_CANCEL_URL:http://localhost:4200/checkout/failure}
+  currency: ${STRIPE_CURRENCY:gbp}

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <style type="text/css">
+        body,
+        table,
+        td,
+        a {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        table,
+        td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+
+        img {
+            -ms-interpolation-mode: bicubic;
+        }
+
+        img {
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+
+        table {
+            border-collapse: collapse !important;
+        }
+
+        body {
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+
+        .main-body {
+            width: 600px;
+            margin: auto;
+        }
+
+        .banner {
+            height: 100px;
+            background-color: #168a71;
+            padding: 10px;
+            width: 600px;
+            margin: auto;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        }
+
+        .confirmation-summary {
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 24px;
+            padding-top: 10px;
+        }
+
+        .order-confirmation-header {
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 24px;
+            padding: 10px;
+            background-color: #e7e7e7;
+        }
+
+        .items-section {
+            padding: 10px;
+            border-top: 3px solid #eeeeee;
+            border-bottom: 3px solid #eeeeee;
+        }
+
+        .items-row {
+            margin-bottom: 10px;
+        }
+
+        .items-table-header {
+            border-bottom: 2px solid #eeeeee;
+            padding: 10px;
+            line-height: 30px;
+        }
+
+        .item {
+            line-height: 10px;
+            padding: 5px 0;
+        }
+
+        .summary-item-row {
+            line-height: 25px;
+        }
+
+        .summary-item-value {
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .total-section {
+            padding: 10px;
+            width: 100%;
+        }
+
+        .delivery-date-section {
+            padding: 10px 0;
+        }
+
+        .greetings-section {
+            margin-top: 30px;
+        }
+
+        .footer-section {
+            margin-top: 40px;
+            font-size: small;
+        }
+
+        a[x-apple-data-detectors] {
+            color: inherit !important;
+            text-decoration: none !important;
+            font-size: inherit !important;
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            line-height: inherit !important;
+        }
+
+        @media screen and (max-width: 480px) {
+            .mobile-hide {
+                display: none !important;
+            }
+
+            .mobile-center {
+                text-align: center !important;
+            }
+        }
+
+        div[style*="margin: 16px 0;"] {
+            margin: 0 !important;
+        }
+    </style>
+
+<body style="margin: 0 !important; padding: 0 !important; background-color: #eeeeee;" bgcolor="#eeeeee">
+    <div class="main-body">
+        <div class="banner">
+            <h1 style="font-size: 36px; font-weight: 800; margin: 0; color: #ffffff; line-height: 100px;">BigTree
+            </h1>
+        </div>
+        <div align="center"
+            style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 24px; padding-top: 25px;">
+            <img src="https://img.icons8.com/carbon-copy/100/000000/checked-checkbox.png" width="125" height="120"
+                style="display: block; border: 0px;" /><br>
+            <h2 style="font-size: 30px; font-weight: 800; line-height: 36px; color: #333333; margin: 0;"> Thank You For
+                Your Order! </h2>
+        </div>
+        <div align="center" class="confirmation-summary">
+            <p style="font-size: 16px; font-weight: 400; line-height: 24px; color: #4b4848;"> Thanks for your order.
+                We’ll let you know once your order confirmed by your Chef. You will receive another email from us
+                confirming your order.
+                You can view the status of your order by visiting Your Orders on www.firstbites.co.uk
+            </p>
+        </div>
+        <div class="order-confirmation-header">
+            <span>Your Order #<span th:utext="${order.reference}"></span></span>
+        </div>
+        <hr>
+        <div>
+            <table style="height: 40px;">
+                <tr>
+                    <td style="height: 60px;width:60px;"><img th:src="${supplier.image}" width="100%" height="100%"
+                            loading="lazy" style="object-fit: cover;"></td>
+                    <td width="80%" style="padding: 0 10px;">
+                        <div>
+                            <span style="font-weight: 600;font-size: 20px;" th:utext="${supplier.name}"></span><br>
+                            <div>
+                                <span th:utext="${supplier.address.addressLine1}"
+                                    th:if="${supplier.address.addressLine1} != null"
+                                    style="font-weight: 300;font-size: 12px;"></span>,
+                                <span th:utext="${supplier.address.addressLine2}" style="font-weight: 300;font-size: 12px;"
+                                    th:if="${supplier.address.addressLine2} != null"></span>,
+                                <span th:utext="${supplier.address.city}" th:if="${supplier.address.city} != null"
+                                    style="font-weight: 300;font-size: 12px;"></span>,
+                                <span th:utext="${supplier.address.country}" style="font-weight: 300;font-size: 12px;"
+                                    th:if="${supplier.address.country} != null"></span>,
+                                <span th:utext="${supplier.address.postcode}" style="font-weight: 300;font-size: 12px;"
+                                    th:if="${supplier.address.postcode} != null"></span><br>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+        <hr>
+        <div th:each="item: ${items}">
+            <div style="display: flex;justify-content: space-between;width: 100%;padding: 1px 0;">
+                <div style="width: 60px;height: 60px;">
+                    <img th:src="${item.image}" width="100%" height="100%" loading="lazy" style="object-fit: cover;">
+                </div>
+                <div style="width: 100%;">
+                    <table cellspacing="0" cellpadding="0" border="0" width="100% ">
+                        <tr width="100%" class="summary-item-row">
+                            <td width="5%" align="left"><span style="width: 5%;padding: 0 10px;font-weight: 600;"
+                                    th:utext="${item.quantity}"></span></td>
+                            <td width="90%"><span style="font-weight: 600;" th:utext="${item.name}"></span></td>
+                            <td width="5%" align="right" style="font-weight: 600;"><span
+                                    tyle="font-weight: 600;width: 5%;padding: 0 10px;" th:remove="tag"
+                                    th:text="${#numbers.formatCurrency(item.price)}"></span></td>
+                        </tr>
+                        <tr width="100%" class="summary-item-row" th:if="${item.choice != null}">
+                            <td width="5%" align="left"><span style="font-weight: 300;padding: 0 10px;"
+                                    th:utext="${item.choice.quantity}"></span></td>
+                            <td width="90%"><span style="font-weight: 300;" th:utext="${item.choice.name}"></span></td>
+                            <td width="5%" align="right"><span th:remove="tag" style="font-weight: 300;"
+                                    th:text="${#numbers.formatCurrency(item.choice.price)}"></span></td>
+                        </tr>
+                        <tr width="100%" class="summary-item-row"
+                            th:if="${item.extras != null  && item.extras.size > 0}">
+                        <tr th:each="extra: ${item.extras}">
+                            <td width="5%" align="left"><span style="font-weight: 300;padding: 0 10px;"
+                                    th:utext="${extra.quantity}"></span></td>
+                            <td width="90%"><span style="font-weight: 300;" th:utext="${extra.name}"></span></td>
+                            <td width="5%" align="right"><span style="font-weight: 300;" th:remove="tag"
+                                    th:text="${#numbers.formatCurrency(extra.price)}"></span></td>
+                        </tr>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <div class="items-section">
+            <table cellspacing="0" cellpadding="0" border="0" width="100% ">
+                <tr width="100%" class="summary-item-row">
+                    <td width="75% " align="left " class="summary-item-name">Sub Total</td>
+                    <td width="25% " align="right " class="summary-item-value"> <span th:remove="tag"
+                            th:text="${#numbers.formatCurrency(order.subTotal)}"></span></td>
+                </tr>
+                <tr width="100%" class="summary-item-row">
+                    <td width="75% " align="left " class="summary-item-name">Bag Fee</td>
+                    <td width="25% " align="right " class="summary-item-value"> <span th:remove="tag"
+                            th:text="${#numbers.formatCurrency(order.packingFee)}"></span></td>
+                </tr>
+                <tr width="100%" class="summary-item-row" th:if="${order.serviceMode == 'DELIVERY'}">
+                    <td width="75% " align="left " class="summary-item-name">Delivery Fee</td>
+                    <td width="25% " align="right " class="summary-item-value"> <span th:remove="tag"
+                            th:text="${#numbers.formatCurrency(order.deliveryFee)}"></span></td>
+                </tr>
+                <tr width="100%" class="summary-item-row">
+                    <td width="75% " align="left " class="summary-item-name">Sale Tax</td>
+                    <td width="25% " align="right " class="summary-item-value"> <span th:remove="tag"
+                            th:text="${#numbers.formatCurrency(order.serviceFee)}"></span></td>
+                </tr>
+            </table>
+        </div>
+        <hr>
+        <div class="items-section">
+            <table cellspacing="0 " cellpadding="0 " border="0 " width="100% ">
+                <tr width="100%" class="summary-item-row">
+                    <td width="75% " align="left " class="summary-item-name" style="font-weight: bold;">TOTAL</td>
+                    <td width="25% " align="right " class="summary-item-value"> <span th:remove="tag"
+                            th:text="${#numbers.formatCurrency(order.total)}"></span></td>
+                </tr>
+            </table>
+        </div>
+        <hr>
+        <div class="delivery-address-section" th:if="${order.serviceMode == 'DELIVERY'}">
+            <p style="font-weight: 800; ">Delivery Address</p>
+            <p>
+            <div th:if="${customer.address.addressLine1} != null">
+                <span th:utext="${customer.address.addressLine1}"></span><br>
+            </div>
+            <div th:if="${customer.address.addressLine2} != null">
+                <span th:utext="${customer.address.addressLine2}"></span><br>
+            </div>
+            <div th:if="${customer.address.city} != null">
+                <span th:utext="${customer.address.city}"></span><br>
+            </div>
+            <div th:if="${customer.address.country} != null">
+                <span th:utext="${customer.address.country}"></span><br>
+            </div>
+            <div th:if="${customer.address.postcode} != null">
+                <span th:utext="${customer.address.postcode}"></span><br>
+            </div>
+            </p>
+            <hr>
+        </div>
+
+        <div class="delivery-date-section" th:if="${order.serviceMode == 'DELIVERY'}">
+            <span style="font-weight: 800;margin-right: 10px; ">Estimated Delivery</span>: <span
+                th:utext="${#temporals.format(order.expectedDeliveryDate, 'dd MMM yyyy')}"></span>
+            <hr>
+        </div>
+        <div class="delivery-date-section" th:if="${order.serviceMode == 'COLLECTION'}">
+            <span style="font-weight: 800;margin-right: 10px; display: block;">Collect by</span>: <span
+                th:utext="${#temporals.format(order.collectBy, 'dd MMM yyyy')}"></span>
+            <hr>
+            <p style="font-weight: 800; ">Collect At</p>
+            <p>
+            <div th:if="${supplier.address.addressLine1} != null">
+                <span th:utext="${supplier.address.addressLine1}"></span><br>
+            </div>
+            <div th:if="${supplier.address.addressLine2} != null">
+                <span th:utext="${supplier.address.addressLine2}"></span><br>
+            </div>
+            <div th:if="${supplier.address.city} != null">
+                <span th:utext="${supplier.address.city}"></span><br>
+            </div>
+            <div th:if="${supplier.address.country} != null">
+                <span th:utext="${supplier.address.country}"></span><br>
+            </div>
+            <div th:if="${supplier.address.postcode} != null">
+                <span th:utext="${supplier.address.postcode}"></span><br>
+            </div>
+            </p>
+            <hr>
+        </div>
+        <div class="greetings-section">
+            <span>We hope to welcome you back to www.firstbites.co.uk soon!</span>
+            <p>
+                Best Regards,
+            </p>
+            <p style="font-style: italic;">
+                The #FirstBites Team
+            </p>
+        </div>
+        <div class="footer-section">
+            <p>
+                ©2023-2024 #FirstBites Ltd. Registered in Scotland. #SC595168. VAT No #295285756
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>
