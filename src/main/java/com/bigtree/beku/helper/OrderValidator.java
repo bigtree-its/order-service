@@ -31,7 +31,7 @@ public class OrderValidator {
         if ( supplier == null ){
             throw new ApiException(HttpStatus.BAD_REQUEST,"Supplier", "Supplier cannot be empty");
         }
-        if ( supplier.getId() == null ){
+        if ( supplier.get_id() == null ){
             throw new ApiException(HttpStatus.BAD_REQUEST,"Supplier", "SupplierId cannot be empty");
         }
         if (StringUtils.isEmpty(supplier.getEmail()) ){

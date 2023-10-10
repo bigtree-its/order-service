@@ -1,7 +1,6 @@
 package com.bigtree.beku;
 
 import com.bigtree.beku.model.*;
-import com.example.demo.model.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

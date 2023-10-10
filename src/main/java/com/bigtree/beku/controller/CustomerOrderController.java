@@ -44,7 +44,7 @@ public class CustomerOrderController {
 
     @PostMapping("")
     public ResponseEntity<CustomerOrder> create(@RequestBody CustomerOrder order) {
-        log.info("Request create {}", order);
+        log.info("Request create order {}", order);
         orderValidator.validateOrder(order);
         final CustomerOrder saved = orderService.createOrder(order);
         if (saved != null) {
@@ -105,17 +105,19 @@ public class CustomerOrderController {
 
     @GetMapping("/search")
     public ResponseEntity<List<CustomerOrder>> searchOrders(
-            @RequestParam("reference") String reference,
-            @RequestParam("customer") String customer,
-            @RequestParam("supplier") String supplier,
-            @RequestParam("dateFrom") LocalDate dateFrom,
-            @RequestParam("dateTo") LocalDate dateTo
+            @RequestParam(value = "reference", required = false) String reference ,
+            @RequestParam(value = "customer", required = false) String customer,
+            @RequestParam(value = "supplier", required = false) String supplier,
+            @RequestParam(value = "date", required = false) LocalDate date,
+            @RequestParam(value = "dateFrom", required = false) LocalDate dateFrom,
+            @RequestParam(value = "dateTo", required = false) LocalDate dateTo
     ) {
         log.info("Request to search orders");
-        final List<CustomerOrder> result = orderService.search(reference, customer, supplier, dateFrom, dateTo);
+        final List<CustomerOrder> result = orderService.search(reference, customer, supplier, date, dateFrom, dateTo);
         log.info("Returning {} orders for search {}", result.size());
         return ResponseEntity.ok(result);
     }
+
 
     @PutMapping("/{orderId}")
     public ResponseEntity<Void> create(@RequestBody CustomerOrder order, @PathVariable("orderId") String orderId) {

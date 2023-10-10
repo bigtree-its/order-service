@@ -42,13 +42,14 @@ public class OrderService {
             String salt = RandomStringUtils.random(8, "ABCD1234");
             order.setReference(salt);
             order.setStatus(OrderStatus.CREATED);
-            order.setDateCreated(LocalDateTime.now());
+            order.setDateCreated(LocalDate.now());
             order.setCreatedAt(LocalDateTime.now());
             response = customerOrderRepository.save(order);
-            log.info("Saved new order: {}", response.getReference());
+            log.info("Saved new order: {}, Ref: {}", response.get_id(), response.getReference());
         } else {
             CustomerOrder loaded = customerOrderRepository.findFirstByReference(order.getReference());
             if (loaded != null) {
+                log.info("Order {}, Ref: {} already exist. Updating", loaded.get_id());
                 response = updateOrder(order, loaded);
             } else {
                 log.error("Unable to update order with reference {}. Order not found", order.getReference());
@@ -103,7 +104,7 @@ public class OrderService {
         return result;
     }
 
-    public List<CustomerOrder> search(String reference, String customer, String supplier, LocalDate dateFrom, LocalDate dateTo) {
+    public List<CustomerOrder> search(String reference, String customer, String supplier, LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
         List<CustomerOrder> result = new ArrayList<>();
         Query query = new Query();
         if (StringUtils.isNotEmpty(reference)) {
@@ -117,18 +118,19 @@ public class OrderService {
         if (StringUtils.isNotEmpty(supplier)) {
             query.addCriteria(Criteria.where("supplier.email").is(supplier));
         }
-        if (dateFrom != null && dateTo != null) {
-            if (dateFrom.compareTo(dateTo) == 0) {
-                query.addCriteria(Criteria.where("dateCreated").is(dateFrom));
-            } else if (!dateFrom.isAfter(dateTo)) {
-                query.addCriteria(Criteria.where("dateCreated").gt(dateFrom));
-                query.addCriteria(Criteria.where("dateCreated").lt(dateTo));
+        if (date != null) {
+            query.addCriteria(Criteria.where("dateCreated").is(date));
+        } else {
+            if (dateFrom != null && dateTo != null) {
+                query.addCriteria(Criteria.where("dateCreated").gte(dateFrom).lte(dateTo));
+            } else if (dateTo != null) {
+                query.addCriteria(Criteria.where("dateCreated").lte(dateTo));
+            } else if (dateFrom != null) {
+                query.addCriteria(Criteria.where("dateCreated").gte(dateFrom));
             }
-        } else if (dateFrom != null && dateTo == null) {
-            query.addCriteria(Criteria.where("dateCreated").gt(dateFrom));
-        } else if (dateTo != null && dateFrom == null) {
-            query.addCriteria(Criteria.where("dateCreated").lt(dateTo));
         }
+
+        log.info("Searching orders with query {}", query.toString());
         result = mongoTemplate.find(query, CustomerOrder.class);
         return result;
     }

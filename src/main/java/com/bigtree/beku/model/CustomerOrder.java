@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,7 +17,7 @@ import java.util.List;
 public class CustomerOrder{
 
     @Id
-    private String id;
+    private String _id;
     private String reference;
     private String notes;
     private String currency;
@@ -30,9 +31,9 @@ public class CustomerOrder{
     private BigDecimal serviceFee;
     private BigDecimal deliveryFee;
     private BigDecimal packingFee;
-    private LocalDateTime dateCreated;
-    private LocalDateTime collectBy;
-    private LocalDateTime expectedDeliveryDate;
+    private LocalDate dateCreated;
+    private LocalDate collectBy;
+    private LocalDate expectedDeliveryDate;
     private LocalDateTime dateAccepted;
     private LocalDateTime dateDelivered;
     private LocalDateTime dateCollected;

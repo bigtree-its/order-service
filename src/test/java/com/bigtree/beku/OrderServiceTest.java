@@ -34,6 +34,7 @@ public class OrderServiceTest {
                         null,
                         null,
                         null,
+                        null,
                         null);
         Assertions.assertNotNull(orders);
         Assertions.assertEquals(1, orders.size());
@@ -42,6 +43,7 @@ public class OrderServiceTest {
        orders = orderService
                 .search(null,
                         order.getCustomer().getEmail(),
+                        null,
                         null,
                         null,
                         null);
@@ -53,6 +55,7 @@ public class OrderServiceTest {
                         null,
                         "email",
                         null,
+                        null,
                         null);
         Assertions.assertNotNull(orders);
 
@@ -62,6 +65,7 @@ public class OrderServiceTest {
                         null,
                         "email",
                         LocalDate.now(),
+                        null,
                         null);
         Assertions.assertNotNull(orders);
 
