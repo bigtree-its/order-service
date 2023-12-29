@@ -87,11 +87,22 @@ public class StripeService {
             params.put("metadata", metadata);
             params.put("amount", stripeAmount.longValue());
             final PaymentIntent paymentIntent = PaymentIntent.retrieve(loadedLocalPaymentIntent.getIntentId());
+            if ( paymentIntent.getStatus().equalsIgnoreCase("succeeded")){
+                log.error("Existing intent for this order reference {} is succeeded. Cannot update anymore.", request.getOrderReference());
+                return LocalPaymentIntent.builder()
+                        .error(true)
+                        .errorMessage("Existing intent for this order reference succeeded. Cannot update.")
+                        .build();
+            }
             PaymentIntent updated = paymentIntent.update(params);
             log.info("Payment Intent is updated with new amount {} for order {}", stripeAmount, request.getOrderReference());
             updatedLocalPaymentIntent = updateLocalPaymentIntent(request, updated, loadedLocalPaymentIntent);
         } catch (StripeException e) {
-            log.error("Error while updating LocalPaymentIntent Intent");
+            log.error("Error while updating LocalPaymentIntent Intent. {}", e.getMessage());
+            return LocalPaymentIntent.builder()
+                    .error(true)
+                    .errorMessage(e.getMessage())
+                    .build();
         }
         return updatedLocalPaymentIntent;
     }
