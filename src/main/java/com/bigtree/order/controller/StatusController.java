@@ -8,13 +8,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/customer-orders")
+@RequestMapping("/")
 public class StatusController {
     
 
-    @GetMapping("status")
+    @GetMapping("")
     public String status(){
-        log.info("Rqeuest for status");
+        log.info("Request for status");
         return "Working !";
     }
 }
