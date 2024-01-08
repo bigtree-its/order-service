@@ -11,9 +11,9 @@ spring:
       database: test
   mail:
     default-encoding: UTF-8
-    host: smtp.aol.com
-    username: bigtree.tech@aol.com
-    password: Dish00m123
+    host: smtp.gmail.com
+    username: noreply.houseofchef@gmail.com
+    password: rfgmkyrbdgwsnvgi
     port: 587
     debug: true
     properties:
@@ -37,9 +37,9 @@ application:
   send-email-confirmation: false
 
 smtp:
-  server: ${SMTP_SERVER:smtp.aol.com}
-  username: bigtree.tech@aol/com
-  password: Dish00m123
+  server: ${SMTP_SERVER:smtp.gmail.com}
+  username: noreply.houseofchef@gmail.com
+  password: rfgmkyrbdgwsnvgi
   debug: true
 
 stripe:
