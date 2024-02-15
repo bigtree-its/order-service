@@ -1,6 +1,7 @@
 package com.bigtree.order.service;
 
 import com.bigtree.order.model.CustomerOrder;
+import com.bigtree.order.model.LocalPaymentIntent;
 import com.bigtree.order.model.OrderStatus;
 import com.bigtree.order.model.PaymentIntentRequest;
 import com.bigtree.order.repository.PaymentRepository;
@@ -85,7 +86,6 @@ public class OrderService {
                 .build());
     }
 
-
     public List<CustomerOrder> findOrdersWithQuery(Map<String, String> qParams) {
         final List<CustomerOrder> result = new ArrayList<>();
         qParams.forEach((k, v) -> {
@@ -104,9 +104,23 @@ public class OrderService {
         return result;
     }
 
-    public List<CustomerOrder> search(String reference, String customer, String supplier, LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
+    public List<CustomerOrder> search(String intentId, String reference, String customer, String supplier,
+            LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
         List<CustomerOrder> result = new ArrayList<>();
         Query query = new Query();
+        if (StringUtils.isNotEmpty(intentId)) {
+            log.info("Searching order with payment intent {}", intentId);
+            LocalPaymentIntent intent = paymentRepository.findFirstByIntentId(intentId);
+            if (intent != null) {
+                CustomerOrder order = customerOrderRepository.findFirstByReference(intent.getOrderReference());
+                if ( order != null){
+                    log.info("Found an order with reference {}", intent.getOrderReference());
+                }
+                result.add(order);
+                return result;
+            }
+        }
+
         if (StringUtils.isNotEmpty(reference)) {
             CustomerOrder order = customerOrderRepository.findFirstByReference(reference);
             result.add(order);

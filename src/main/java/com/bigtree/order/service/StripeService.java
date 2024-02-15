@@ -8,12 +8,17 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -33,10 +38,20 @@ public class StripeService {
     @Autowired
     PaymentRepository paymentRepository;
 
-    public LocalPaymentIntent getPaymentIntent(String orderReference) {
-        log.info("Retrieving localPaymentIntent for order {}", orderReference);
-        final LocalPaymentIntent localPaymentIntent = paymentRepository.findFirstByOrderReference(orderReference);
-        return localPaymentIntent;
+
+    public List<LocalPaymentIntent> lookup(String orderReference) {
+        List<LocalPaymentIntent> result = new ArrayList<>();
+        if ( StringUtils.isNoneEmpty(orderReference)){
+            log.info("Retrieving localPaymentIntent for orderReference {}", orderReference);
+            LocalPaymentIntent localPaymentIntent = paymentRepository.findFirstByOrderReference(orderReference);
+            if ( localPaymentIntent == null){
+                result.add(localPaymentIntent);
+            }
+        }
+        if ( CollectionUtils.isEmpty(result)){
+            return paymentRepository.findAll();
+        }
+        return result;
     }
 
     public LocalPaymentIntent createPaymentIntent(PaymentIntentRequest request) {
@@ -134,5 +149,18 @@ public class StripeService {
             log.info("New LocalPaymentIntent is saved for order {}" , newLocalPaymentIntent.getOrderReference());
         }
         return newLocalPaymentIntent;
+    }
+
+    public LocalPaymentIntent getPaymentIntentById(String intentId) {
+        LocalPaymentIntent localPaymentIntent = null;
+        if ( StringUtils.isNoneEmpty(intentId)){
+            log.info("Retrieving localPaymentIntent for intentId {}", intentId);
+            localPaymentIntent = paymentRepository.findFirstByIntentId(intentId);
+        }
+        if ( localPaymentIntent!= null){
+            log.info("Found an intent with id {}", localPaymentIntent.getIntentId());
+        }
+       
+        return localPaymentIntent;
     }
 }

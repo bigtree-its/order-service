@@ -105,6 +105,7 @@ public class CustomerOrderController {
 
     @GetMapping("/search")
     public ResponseEntity<List<CustomerOrder>> searchOrders(
+            @RequestParam(value = "intentId", required = false) String intentId ,
             @RequestParam(value = "reference", required = false) String reference ,
             @RequestParam(value = "customer", required = false) String customer,
             @RequestParam(value = "supplier", required = false) String supplier,
@@ -113,7 +114,7 @@ public class CustomerOrderController {
             @RequestParam(value = "dateTo", required = false) LocalDate dateTo
     ) {
         log.info("Request to search orders");
-        final List<CustomerOrder> result = orderService.search(reference, customer, supplier, date, dateFrom, dateTo);
+        final List<CustomerOrder> result = orderService.search(intentId, reference, customer, supplier, date, dateFrom, dateTo);
         log.info("Returning {} orders for search {}", result.size());
         return ResponseEntity.ok(result);
     }
@@ -133,7 +134,7 @@ public class CustomerOrderController {
     }
 
     private void sendOrderConfirmation(CustomerOrder order) {
-        String subject = "Your #FirstBites order " + order.getReference();
+        String subject = "Your Chumma order " + order.getReference();
         Map<String, Object> body = new HashMap<>();
         body.put("order", order);
         body.put("customer", order.getCustomer());
