@@ -60,7 +60,7 @@ public class StripeService {
         final LocalPaymentIntent loadedLocalPaymentIntent = paymentRepository.findFirstByOrderReference(request.getOrderReference());
         BigDecimal reqAmount = request.getAmount().multiply(hundred);
         if (loadedLocalPaymentIntent != null && loadedLocalPaymentIntent.getAmount().compareTo(reqAmount) != 0) {
-            log.info("Payment Intent already found, but amount changed for {}", request.getOrderReference());
+            log.info("Payment Intent already found, but amount changed from {} to {}",loadedLocalPaymentIntent.getAmount(), reqAmount);
             return updateStripePaymentIntent(request, loadedLocalPaymentIntent);
         }
         if (loadedLocalPaymentIntent != null && loadedLocalPaymentIntent.getAmount().compareTo(reqAmount) == 0) {
@@ -103,7 +103,7 @@ public class StripeService {
             params.put("amount", stripeAmount.longValue());
             final PaymentIntent paymentIntent = PaymentIntent.retrieve(loadedLocalPaymentIntent.getIntentId());
             if ( paymentIntent.getStatus().equalsIgnoreCase("succeeded")){
-                log.error("Existing intent for this order reference {} is succeeded. Cannot update anymore.", request.getOrderReference());
+                log.error("Existing intent {} in stripe is succeeded. Cannot update anymore.", paymentIntent.getId());
                 return LocalPaymentIntent.builder()
                         .error(true)
                         .errorMessage("Existing intent for this order reference succeeded. Cannot update.")
