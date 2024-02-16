@@ -44,7 +44,7 @@ public class StripeService {
         if ( StringUtils.isNoneEmpty(orderReference)){
             log.info("Retrieving localPaymentIntent for orderReference {}", orderReference);
             LocalPaymentIntent localPaymentIntent = paymentRepository.findFirstByOrderReference(orderReference);
-            if ( localPaymentIntent == null){
+            if ( localPaymentIntent != null){
                 result.add(localPaymentIntent);
             }
         }
