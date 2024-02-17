@@ -1,9 +1,6 @@
 package com.bigtree.order.service;
 
-import com.bigtree.order.model.CustomerOrder;
-import com.bigtree.order.model.LocalPaymentIntent;
-import com.bigtree.order.model.OrderStatus;
-import com.bigtree.order.model.PaymentIntentRequest;
+import com.bigtree.order.model.*;
 import com.bigtree.order.repository.PaymentRepository;
 import com.bigtree.order.repository.CustomerOrderRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +34,9 @@ public class OrderService {
 
     @Autowired
     StripeService stripeService;
+
+    @Autowired
+    EmailService emailService;
 
     public CustomerOrder createOrder(CustomerOrder order) {
         CustomerOrder response = null;
@@ -105,7 +106,7 @@ public class OrderService {
     }
 
     public List<CustomerOrder> search(String intentId, String reference, String customer, String supplier,
-            LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
+                                      LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
         List<CustomerOrder> result = new ArrayList<>();
         Query query = new Query();
         if (StringUtils.isNotEmpty(intentId)) {
@@ -113,7 +114,7 @@ public class OrderService {
             LocalPaymentIntent intent = paymentRepository.findFirstByIntentId(intentId);
             if (intent != null) {
                 CustomerOrder order = customerOrderRepository.findFirstByReference(intent.getOrderReference());
-                if ( order != null){
+                if (order != null) {
                     log.info("Found an order with reference {}", intent.getOrderReference());
                 }
                 result.add(order);
@@ -147,5 +148,57 @@ public class OrderService {
         log.info("Searching orders with query {}", query.toString());
         result = mongoTemplate.find(query, CustomerOrder.class);
         return result;
+    }
+
+    public CustomerOrder updateStatus(String paymentIntentId, String status) {
+        LocalPaymentIntent byIntentId = paymentRepository.findFirstByIntentId(paymentIntentId);
+        if (byIntentId != null) {
+            byIntentId.setStatus(status);
+            paymentRepository.save(byIntentId);
+            CustomerOrder order = customerOrderRepository.findFirstByReference(byIntentId.getOrderReference());
+            if (order != null) {
+                log.info("Order found with reference {}", order.getReference());
+                if (status.equalsIgnoreCase("succeeded")) {
+                    order.setStatus(OrderStatus.PAID);
+                } else {
+                    order.setStatus(OrderStatus.PAYMENT_ERROR);
+                }
+                order.setUpdatedAt(LocalDateTime.now());
+                customerOrderRepository.save(order);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendEmail(order);
+                    }
+                }).start();
+                return  order;
+            }
+        }
+        log.info("Cannot locate payment intent {}", paymentIntentId);
+        return null;
+    }
+
+    private void sendEmail(CustomerOrder order) {
+        String message = "";
+        if (order.getStatus() == OrderStatus.PAID) {
+            message = "We have received your payment.";
+        } else if (order.getStatus() == OrderStatus.PAYMENT_ERROR) {
+            message = "There is an issue with your payment";
+        }
+        String subject = "Your Chumma order " + order.getReference();
+        Map<String, Object> body = new HashMap<>();
+        body.put("order", order);
+        body.put("customer", order.getCustomer());
+        body.put("items", order.getItems());
+        body.put("message", message);
+        body.put("supplier", order.getSupplier());
+        emailService.sendMail(order.getCustomer().getEmail(), subject, "order-update", body);
+    }
+
+    public CustomerOrder update(OrderUpdateRequest orderUpdateRequest) {
+        if (StringUtils.isNotEmpty(orderUpdateRequest.getPaymentIntentId()) && StringUtils.isNotEmpty(orderUpdateRequest.getPaymentStatus())){
+            return updateStatus(orderUpdateRequest.getPaymentIntentId(), orderUpdateRequest.getPaymentStatus());
+        }
+        return null;
     }
 }

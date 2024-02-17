@@ -2,6 +2,7 @@ package com.bigtree.order.controller;
 
 import com.bigtree.order.exception.ApiException;
 import com.bigtree.order.helper.OrderValidator;
+import com.bigtree.order.model.OrderUpdateRequest;
 import com.bigtree.order.service.EmailService;
 import com.bigtree.order.model.CustomerOrder;
 import com.bigtree.order.repository.CustomerOrderRepository;
@@ -67,7 +68,7 @@ public class CustomerOrderController {
 
     @GetMapping("")
     public List<CustomerOrder> getAllOrders() {
-        log.info("Request get all {}");
+        log.info("Request to get all orders");
         List<CustomerOrder> all = repository.findAll();
         log.info("Returning {} customer orders", all.size());
         return all;
@@ -75,7 +76,7 @@ public class CustomerOrderController {
 
     @DeleteMapping("")
     public ResponseEntity<Void> deleteAllOrders() {
-        log.info("Request delete all {}");
+        log.info("Request to delete all orders");
         repository.deleteAll();
         return ResponseEntity.accepted().build();
     }
@@ -121,7 +122,7 @@ public class CustomerOrderController {
 
 
     @PutMapping("/{orderId}")
-    public ResponseEntity<Void> create(@RequestBody CustomerOrder order, @PathVariable("orderId") String orderId) {
+    public ResponseEntity<CustomerOrder> updateOrder(@RequestBody CustomerOrder order, @PathVariable("orderId") String orderId) {
         log.info("Request update order {}", orderId);
         final Optional<CustomerOrder> byId = repository.findById(orderId);
         if (byId.isEmpty()) {
@@ -131,6 +132,20 @@ public class CustomerOrderController {
         customerOrder.setUpdatedAt(LocalDateTime.now());
         customerOrder.setStatus(order.getStatus());
         return ResponseEntity.status(HttpStatusCode.valueOf(202)).build();
+    }
+
+    @PutMapping("")
+    public ResponseEntity<CustomerOrder> updateOrderStatus(@RequestParam() String paymentIntentId, @RequestParam() String status) {
+        log.info("Request to update order with payment intent {}", paymentIntentId);
+        CustomerOrder customerOrder = orderService.updateStatus(paymentIntentId, status);
+        return ResponseEntity.ok(customerOrder);
+    }
+
+    @PutMapping("")
+    public ResponseEntity<CustomerOrder> updateOrder(@RequestBody OrderUpdateRequest orderUpdateRequest) {
+        log.info("Request to update order  {}", orderUpdateRequest);
+        CustomerOrder customerOrder = orderService.update(orderUpdateRequest);
+        return ResponseEntity.ok(customerOrder);
     }
 
     private void sendOrderConfirmation(CustomerOrder order) {

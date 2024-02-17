@@ -10,4 +10,6 @@ public enum OrderStatus {
     REFUNDED,
     DELIVERED,
     REJECTED,
+
+    PAYMENT_ERROR,
 }

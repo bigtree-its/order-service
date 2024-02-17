@@ -28,6 +28,13 @@ public class StripeController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/payment-intent/{id}")
+    public ResponseEntity<LocalPaymentIntent> updatePaymentIntent(@PathVariable  String id, @RequestParam(required = false, value = "status") String status) {
+        log.info("Request received to update Payment Intent {}, status {}", id, status);
+        LocalPaymentIntent response = stripeService.updatePaymentIntent(id, status);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/payment-intent")
     public ResponseEntity<List<LocalPaymentIntent>> getAll(@RequestParam(required = false, value = "orderReference") String orderReference) {
         log.info("Request: getPaymentIntent for order reference {}", orderReference);

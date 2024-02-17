@@ -38,7 +38,6 @@ public class StripeService {
     @Autowired
     PaymentRepository paymentRepository;
 
-
     public List<LocalPaymentIntent> lookup(String orderReference) {
         List<LocalPaymentIntent> result = new ArrayList<>();
         if ( StringUtils.isNoneEmpty(orderReference)){
@@ -145,9 +144,7 @@ public class StripeService {
                 .status(stripeIntent.getStatus())
                 .supplier(request.getSupplierId())
                 .build());
-        if (newLocalPaymentIntent != null) {
-            log.info("New LocalPaymentIntent is saved for order {}" , newLocalPaymentIntent.getOrderReference());
-        }
+        log.info("New LocalPaymentIntent is created for order {}" , newLocalPaymentIntent.getOrderReference());
         return newLocalPaymentIntent;
     }
 
@@ -162,5 +159,15 @@ public class StripeService {
         }
        
         return localPaymentIntent;
+    }
+
+    public LocalPaymentIntent updatePaymentIntent(String id, String status) {
+        LocalPaymentIntent byId = getPaymentIntentById(id);
+        if ( byId != null){
+            byId.setStatus(status);
+            paymentRepository.save(byId);
+            return byId;
+        }
+        return null;
     }
 }
