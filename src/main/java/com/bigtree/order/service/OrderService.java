@@ -1,5 +1,6 @@
 package com.bigtree.order.service;
 
+import com.bigtree.order.exception.ApiException;
 import com.bigtree.order.model.*;
 import com.bigtree.order.repository.PaymentRepository;
 import com.bigtree.order.repository.CustomerOrderRepository;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -195,10 +197,54 @@ public class OrderService {
         emailService.sendMail(order.getCustomer().getEmail(), subject, "order-update", body);
     }
 
-    public CustomerOrder update(OrderUpdateRequest orderUpdateRequest) {
-        if (StringUtils.isNotEmpty(orderUpdateRequest.getPaymentIntentId()) && StringUtils.isNotEmpty(orderUpdateRequest.getPaymentStatus())){
-            return updateStatus(orderUpdateRequest.getPaymentIntentId(), orderUpdateRequest.getPaymentStatus());
+    private CustomerOrder findByReference(String reference){
+        return customerOrderRepository.findFirstByReference(reference);
+    }
+
+    private CustomerOrder findByPaymentIntentId(String paymentIntentId){
+        LocalPaymentIntent paymentIntent = paymentRepository.findFirstByIntentId(paymentIntentId);
+        if ( paymentIntent != null){
+            return findByReference(paymentIntent.getOrderReference());
         }
+        log.error("Payment intent not found with id {}", paymentIntentId);
         return null;
+    }
+
+
+    public CustomerOrder update(OrderUpdateRequest request) {
+        if ( StringUtils.isEmpty(request.getReference()) && StringUtils.isEmpty(request.getPaymentIntentId())){
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Either order reference or payment intent id is mandatory");
+        }
+        if (StringUtils.isNotEmpty(request.getPaymentIntentId()) && StringUtils.isNotEmpty(request.getPaymentStatus())){
+            return updateStatus(request.getPaymentIntentId(), request.getPaymentStatus());
+        }
+        CustomerOrder order = null;
+        if ( StringUtils.isNotEmpty(request.getReference())){
+            order = findByReference(request.getReference());
+        }
+        if ( order == null && StringUtils.isNotEmpty(request.getPaymentIntentId())){
+            order = findByPaymentIntentId(request.getPaymentIntentId());
+        }
+        if ( order == null){
+            log.error("Cannot find an order");
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Either valid order reference or payment intent id is mandatory");
+        }
+        if (StringUtils.isNotEmpty(request.getChefNotes())){
+            order.setNotes(request.getChefNotes());
+        }
+        if ( StringUtils.isNotEmpty(request.getCustomerComments())){
+            order.setCustomerComment(request.getCustomerComments());
+        }
+        if ( request.getCustomerRating() != null){
+            order.setCustomerRating(request.getCustomerRating());
+        }
+        if ( request.getExpectedCollectionDate() != null){
+            order.setCollectBy(request.getExpectedCollectionDate());
+        }
+        if ( request.getExpectedDeliveryDate() != null){
+            order.setExpectedDeliveryDate(request.getExpectedDeliveryDate());
+        }
+        log.info("Order updated {}", order.getReference());
+        return customerOrderRepository.save(order);
     }
 }

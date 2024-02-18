@@ -20,6 +20,8 @@ public class CustomerOrder{
     private String _id;
     private String reference;
     private String notes;
+    private String customerComment;
+    private Integer customerRating;
     private String currency;
     private OrderStatus status;
     private ServiceMode serviceMode;

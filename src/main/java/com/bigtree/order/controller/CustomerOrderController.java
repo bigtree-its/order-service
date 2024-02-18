@@ -135,13 +135,6 @@ public class CustomerOrderController {
     }
 
     @PutMapping("")
-    public ResponseEntity<CustomerOrder> updateOrderStatus(@RequestParam() String paymentIntentId, @RequestParam() String status) {
-        log.info("Request to update order with payment intent {}", paymentIntentId);
-        CustomerOrder customerOrder = orderService.updateStatus(paymentIntentId, status);
-        return ResponseEntity.ok(customerOrder);
-    }
-
-    @PutMapping("")
     public ResponseEntity<CustomerOrder> updateOrder(@RequestBody OrderUpdateRequest orderUpdateRequest) {
         log.info("Request to update order  {}", orderUpdateRequest);
         CustomerOrder customerOrder = orderService.update(orderUpdateRequest);
