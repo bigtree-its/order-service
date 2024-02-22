@@ -173,6 +173,7 @@ public class StripeService {
         if ( byId != null){
             byId.setStatus(status);
             paymentRepository.save(byId);
+            log.info("Payment intent status updated to {}", status);
             return byId;
         }
         return null;
