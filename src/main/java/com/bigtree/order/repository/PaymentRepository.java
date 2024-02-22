@@ -15,7 +15,7 @@ import java.util.List;
  */
 public interface PaymentRepository extends MongoRepository<LocalPaymentIntent, String> {
 
-    LocalPaymentIntent findFirstByOrderReference(String orderId);
+    LocalPaymentIntent findFirstByOrderReference(String orderReference);
 
     LocalPaymentIntent findFirstByIntentId(String intentId);
 
@@ -25,4 +25,5 @@ public interface PaymentRepository extends MongoRepository<LocalPaymentIntent, S
 
     List<LocalPaymentIntent> findBySupplier(String supplier);
 
+    List<LocalPaymentIntent> findByStatus(String status);
 }

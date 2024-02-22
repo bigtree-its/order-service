@@ -51,9 +51,9 @@ public class OrderService {
             response = customerOrderRepository.save(order);
             log.info("Saved new order: {}, Ref: {}", response.get_id(), response.getReference());
         } else {
-            CustomerOrder loaded = customerOrderRepository.findFirstByReference(order.getReference());
+            CustomerOrder loaded = customerOrderRepository.findByReference(order.getReference());
             if (loaded != null) {
-                log.info("Order {}, Ref: {} already exist. Updating", loaded.get_id());
+                log.info("Order {} already exist. Updating", loaded.getReference());
                 response = updateOrder(order, loaded);
             } else {
                 log.error("Unable to update order with reference {}. Order not found", order.getReference());
@@ -97,7 +97,7 @@ public class OrderService {
                 result.addAll(customerOrderRepository.findByCustomerEmail(v));
             } else if (k.equalsIgnoreCase("reference")) {
                 log.info("Looking for orders with reference {}", v);
-                result.add(customerOrderRepository.findFirstByReference(v));
+                result.add(customerOrderRepository.findByReference(v));
             } else if (k.equalsIgnoreCase("status")) {
                 log.info("Looking for orders with status {}", v);
                 result.addAll(customerOrderRepository.findByStatus(OrderStatus.valueOf(v)));
@@ -115,7 +115,7 @@ public class OrderService {
             log.info("Searching order with payment intent {}", intentId);
             LocalPaymentIntent intent = paymentRepository.findFirstByIntentId(intentId);
             if (intent != null) {
-                CustomerOrder order = customerOrderRepository.findFirstByReference(intent.getOrderReference());
+                CustomerOrder order = customerOrderRepository.findByReference(intent.getOrderReference());
                 if (order != null) {
                     log.info("Found an order with reference {}", intent.getOrderReference());
                 }
@@ -125,7 +125,7 @@ public class OrderService {
         }
 
         if (StringUtils.isNotEmpty(reference)) {
-            CustomerOrder order = customerOrderRepository.findFirstByReference(reference);
+            CustomerOrder order = customerOrderRepository.findByReference(reference);
             result.add(order);
             return result;
         }
@@ -157,7 +157,7 @@ public class OrderService {
         if (byIntentId != null) {
             byIntentId.setStatus(status);
             paymentRepository.save(byIntentId);
-            CustomerOrder order = customerOrderRepository.findFirstByReference(byIntentId.getOrderReference());
+            CustomerOrder order = customerOrderRepository.findByReference(byIntentId.getOrderReference());
             if (order != null) {
                 log.info("Order found with reference {}", order.getReference());
                 if (status.equalsIgnoreCase("succeeded")) {
@@ -198,7 +198,7 @@ public class OrderService {
     }
 
     private CustomerOrder findByReference(String reference){
-        return customerOrderRepository.findFirstByReference(reference);
+        return customerOrderRepository.findByReference(reference);
     }
 
     private CustomerOrder findByPaymentIntentId(String paymentIntentId){

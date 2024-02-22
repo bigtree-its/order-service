@@ -38,13 +38,20 @@ public class StripeService {
     @Autowired
     PaymentRepository paymentRepository;
 
-    public List<LocalPaymentIntent> lookup(String orderReference) {
+    public List<LocalPaymentIntent> lookup(String orderReference, String status) {
         List<LocalPaymentIntent> result = new ArrayList<>();
-        if ( StringUtils.isNoneEmpty(orderReference)){
+        if ( StringUtils.isNotEmpty(orderReference)){
             log.info("Retrieving localPaymentIntent for orderReference {}", orderReference);
             LocalPaymentIntent localPaymentIntent = paymentRepository.findFirstByOrderReference(orderReference);
             if ( localPaymentIntent != null){
                 result.add(localPaymentIntent);
+            }
+        }
+        if ( StringUtils.isNotEmpty(status)){
+            log.info("Retrieving PaymentIntent for status {}", status);
+            List<LocalPaymentIntent> list = paymentRepository.findByStatus(status);
+            if ( !CollectionUtils.isEmpty(list)){
+                return list;
             }
         }
         if ( CollectionUtils.isEmpty(result)){

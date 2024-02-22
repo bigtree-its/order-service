@@ -35,7 +35,7 @@ public class OrderTrackingController {
     public ResponseEntity<OrderTracking> updateOrderTracking(@RequestBody OrderTracking orderTracking) {
         log.info("Update OrderTracking by reference {}", orderTracking.getReference());
         OrderTracking result = null;
-        CustomerOrder order = customerOrderRepository.findFirstByReference(orderTracking.getReference());
+        CustomerOrder order = customerOrderRepository.findByReference(orderTracking.getReference());
         if (order != null) {
             OrderTracking byOrderReference = repository.findFirstByReference(orderTracking.getReference());
             if ( byOrderReference == null){

@@ -22,7 +22,7 @@ import java.util.UUID;
  */
 public interface CustomerOrderRepository extends MongoRepository<CustomerOrder, String> {
 
-    CustomerOrder findFirstByReference(String reference);
+    CustomerOrder findByReference(String reference);
 
     /**
      * Retrieve count of <code>Order</code> from the data store for given date

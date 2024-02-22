@@ -36,9 +36,10 @@ public class StripeController {
     }
 
     @GetMapping("/payment-intent")
-    public ResponseEntity<List<LocalPaymentIntent>> getAll(@RequestParam(required = false, value = "orderReference") String orderReference) {
-        log.info("Request: getPaymentIntent for order reference {}", orderReference);
-        List<LocalPaymentIntent> response = stripeService.lookup(orderReference);
+    public ResponseEntity<List<LocalPaymentIntent>> getAll(@RequestParam(required = false, value = "orderReference") String orderReference,
+                                                           @RequestParam(required = false, value = "status") String status) {
+        log.info("Request: Lookup payment intents");
+        List<LocalPaymentIntent> response = stripeService.lookup(orderReference, status);
         return ResponseEntity.ok(response);
     }
 

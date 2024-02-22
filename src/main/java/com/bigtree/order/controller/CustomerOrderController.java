@@ -50,7 +50,7 @@ public class CustomerOrderController {
         final CustomerOrder saved = orderService.createOrder(order);
         if (saved != null) {
             log.info("Order saved: {}", saved.getReference());
-            if ( sendEmailConfirmation){
+            if (sendEmailConfirmation) {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -59,7 +59,7 @@ public class CustomerOrderController {
                 }).start();
             }
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-        }else{
+        } else {
             log.error("Order creation failed");
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).build();
         }
@@ -98,16 +98,21 @@ public class CustomerOrderController {
 
     @GetMapping("/reference/{reference}")
     public ResponseEntity<CustomerOrder> getOneByReference(@PathVariable("reference") String reference) {
-        log.info("Request get one {}", reference);
-        final CustomerOrder byReference = repository.findFirstByReference(reference);
-        log.info("Returning one customer order with reference: {}", reference);
+        log.info("Request get customer order with reference {}", reference);
+        final CustomerOrder byReference = repository.findByReference(reference);
+        if (byReference == null) {
+            log.error("No order found with reference {}", reference);
+        } else {
+            log.info("Returning customer order with reference: {}", reference);
+        }
+
         return ResponseEntity.ok(byReference);
     }
 
     @GetMapping("/search")
     public ResponseEntity<List<CustomerOrder>> searchOrders(
-            @RequestParam(value = "intentId", required = false) String intentId ,
-            @RequestParam(value = "reference", required = false) String reference ,
+            @RequestParam(value = "intentId", required = false) String intentId,
+            @RequestParam(value = "reference", required = false) String reference,
             @RequestParam(value = "customer", required = false) String customer,
             @RequestParam(value = "supplier", required = false) String supplier,
             @RequestParam(value = "date", required = false) LocalDate date,
