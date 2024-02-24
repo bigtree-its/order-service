@@ -1,8 +1,11 @@
 package com.bigtree.order.model;
 
 public enum OrderStatus {
+    DRAFT,
     CREATED,
     PAID,
+    IN_PROGRESS,
+    PENDING,
     ACCEPTED,
     PROCESSING,
     COLLECTED,

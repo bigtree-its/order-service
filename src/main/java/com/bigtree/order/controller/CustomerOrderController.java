@@ -121,7 +121,7 @@ public class CustomerOrderController {
     ) {
         log.info("Request to search orders");
         final List<CustomerOrder> result = orderService.search(intentId, reference, customer, supplier, date, dateFrom, dateTo);
-        log.info("Returning {} orders for search {}", result.size());
+        log.info("Returning {} orders for search", result.size());
         return ResponseEntity.ok(result);
     }
 
@@ -146,8 +146,15 @@ public class CustomerOrderController {
         return ResponseEntity.ok(customerOrder);
     }
 
+    @PutMapping("/action")
+    public ResponseEntity<CustomerOrder> action(@RequestParam String ref, @RequestParam String action) {
+        log.info("Request to {} order  {}", action, ref);
+        CustomerOrder customerOrder = orderService.action(ref, action);
+        return ResponseEntity.ok(customerOrder);
+    }
+
     private void sendOrderConfirmation(CustomerOrder order) {
-        String subject = "Your Chumma order " + order.getReference();
+        String subject = "Your Zuvai order " + order.getReference();
         Map<String, Object> body = new HashMap<>();
         body.put("order", order);
         body.put("customer", order.getCustomer());

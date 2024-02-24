@@ -43,9 +43,9 @@ public class OrderService {
     public CustomerOrder createOrder(CustomerOrder order) {
         CustomerOrder response = null;
         if (StringUtils.isEmpty(order.getReference())) {
-            String salt = RandomStringUtils.random(8, "ABCD1234");
+            String salt = RandomStringUtils.random(6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
             order.setReference(salt);
-            order.setStatus(OrderStatus.CREATED);
+            order.setStatus(OrderStatus.DRAFT);
             order.setDateCreated(LocalDate.now());
             order.setCreatedAt(LocalDateTime.now());
             response = customerOrderRepository.save(order);
@@ -173,7 +173,7 @@ public class OrderService {
                         sendEmail(order);
                     }
                 }).start();
-                return  order;
+                return order;
             }
         }
         log.info("Cannot locate payment intent {}", paymentIntentId);
@@ -197,13 +197,13 @@ public class OrderService {
         emailService.sendMail(order.getCustomer().getEmail(), subject, "order-update", body);
     }
 
-    private CustomerOrder findByReference(String reference){
+    private CustomerOrder findByReference(String reference) {
         return customerOrderRepository.findByReference(reference);
     }
 
-    private CustomerOrder findByPaymentIntentId(String paymentIntentId){
+    private CustomerOrder findByPaymentIntentId(String paymentIntentId) {
         LocalPaymentIntent paymentIntent = paymentRepository.findFirstByIntentId(paymentIntentId);
-        if ( paymentIntent != null){
+        if (paymentIntent != null) {
             return findByReference(paymentIntent.getOrderReference());
         }
         log.error("Payment intent not found with id {}", paymentIntentId);
@@ -212,39 +212,71 @@ public class OrderService {
 
 
     public CustomerOrder update(OrderUpdateRequest request) {
-        if ( StringUtils.isEmpty(request.getReference()) && StringUtils.isEmpty(request.getPaymentIntentId())){
+        if (StringUtils.isEmpty(request.getReference()) && StringUtils.isEmpty(request.getPaymentIntentId())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Either order reference or payment intent id is mandatory");
         }
-        if (StringUtils.isNotEmpty(request.getPaymentIntentId()) && StringUtils.isNotEmpty(request.getPaymentStatus())){
+        if (StringUtils.isNotEmpty(request.getPaymentIntentId()) && StringUtils.isNotEmpty(request.getPaymentStatus())) {
             return updateStatus(request.getPaymentIntentId(), request.getPaymentStatus());
         }
         CustomerOrder order = null;
-        if ( StringUtils.isNotEmpty(request.getReference())){
+        if (StringUtils.isNotEmpty(request.getReference())) {
             order = findByReference(request.getReference());
         }
-        if ( order == null && StringUtils.isNotEmpty(request.getPaymentIntentId())){
+        if (order == null && StringUtils.isNotEmpty(request.getPaymentIntentId())) {
             order = findByPaymentIntentId(request.getPaymentIntentId());
         }
-        if ( order == null){
+        if (order == null) {
             log.error("Cannot find an order");
             throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Either valid order reference or payment intent id is mandatory");
         }
-        if (StringUtils.isNotEmpty(request.getChefNotes())){
+        if (StringUtils.isNotEmpty(request.getChefNotes())) {
             order.setNotes(request.getChefNotes());
         }
-        if ( StringUtils.isNotEmpty(request.getCustomerComments())){
+        if (StringUtils.isNotEmpty(request.getCustomerComments())) {
             order.setCustomerComment(request.getCustomerComments());
         }
-        if ( request.getCustomerRating() != null){
+        if (request.getCustomerRating() != null) {
             order.setCustomerRating(request.getCustomerRating());
         }
-        if ( request.getExpectedCollectionDate() != null){
+        if (request.getExpectedCollectionDate() != null) {
             order.setCollectBy(request.getExpectedCollectionDate());
         }
-        if ( request.getExpectedDeliveryDate() != null){
+        if (request.getExpectedDeliveryDate() != null) {
             order.setExpectedDeliveryDate(request.getExpectedDeliveryDate());
         }
         log.info("Order updated {}", order.getReference());
         return customerOrderRepository.save(order);
     }
+
+    public CustomerOrder action(String reference, String action) {
+        if (StringUtils.isEmpty(reference) || StringUtils.isEmpty(action)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Order Reference and action are mandatory");
+        }
+        CustomerOrder byReference = customerOrderRepository.findByReference(reference);
+        if (byReference == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Order not found");
+        }
+        switch (action) {
+            case "Accept" -> byReference.setStatus(OrderStatus.ACCEPTED);
+            case "Submit" -> byReference.setStatus(OrderStatus.PENDING);
+            case "Cancel" -> byReference.setStatus(OrderStatus.CANCELLED);
+            case "Reject" -> byReference.setStatus(OrderStatus.REJECTED);
+            case "Refund" -> byReference.setStatus(OrderStatus.REFUNDED);
+            case "Delete" -> deleteOrder(byReference);
+            default -> throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Action not supported");
+        }
+        if ( !StringUtils.equalsIgnoreCase("Delete", action)){
+            customerOrderRepository.save(byReference);
+            log.info("Order {} status updated to {}", reference, byReference.getStatus().name());
+        }
+        return byReference;
+    }
+
+    private void deleteOrder(CustomerOrder order) {
+        if ( order.getStatus() == OrderStatus.DRAFT ||  order.getStatus() == OrderStatus.CANCELLED){
+            customerOrderRepository.delete(order);
+            log.info("Order {} has been deleted", order.getReference());
+        }
+    }
+
 }
