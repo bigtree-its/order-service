@@ -44,10 +44,10 @@ public class CustomerOrderController {
     OrderService orderService;
 
     @PostMapping("")
-    public ResponseEntity<CustomerOrder> create(@RequestBody CustomerOrder order) {
+    public ResponseEntity<CustomerOrder> create(@RequestBody CustomerOrder order, @RequestParam("action") String action) {
         log.info("Request create order {}", order);
         orderValidator.validateOrder(order);
-        final CustomerOrder saved = orderService.createOrder(order);
+        final CustomerOrder saved = orderService.createOrder(order, action);
         if (saved != null) {
             log.info("Order saved: {}", saved.getReference());
             if (sendEmailConfirmation) {

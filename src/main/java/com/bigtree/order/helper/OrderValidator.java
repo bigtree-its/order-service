@@ -24,7 +24,7 @@ public class OrderValidator {
         }
         validateItems(order.getItems());
         validateSupplier(order.getSupplier());
-        validateCustomer(order.getCustomer(), order.getServiceMode() == ServiceMode.DELIVERY ? true: false);
+        validateCustomer(order.getCustomer(), order.getServiceMode() == ServiceMode.DELIVERY);
     }
 
     private void validateSupplier(Supplier supplier){

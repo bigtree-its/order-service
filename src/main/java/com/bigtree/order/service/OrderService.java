@@ -40,12 +40,16 @@ public class OrderService {
     @Autowired
     EmailService emailService;
 
-    public CustomerOrder createOrder(CustomerOrder order) {
+    public CustomerOrder createOrder(CustomerOrder order, String action) {
         CustomerOrder response = null;
         if (StringUtils.isEmpty(order.getReference())) {
             String salt = RandomStringUtils.random(6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
             order.setReference(salt);
-            order.setStatus(OrderStatus.DRAFT);
+            if (action.equalsIgnoreCase("Submit")) {
+                order.setStatus(OrderStatus.PENDING);
+            } else {
+                order.setStatus(OrderStatus.DRAFT);
+            }
             order.setDateCreated(LocalDate.now());
             order.setCreatedAt(LocalDateTime.now());
             response = customerOrderRepository.save(order);
@@ -62,7 +66,7 @@ public class OrderService {
         return response;
     }
 
-    private CustomerOrder updateOrder(CustomerOrder order, CustomerOrder loaded) {
+    private CustomerOrder updateOrder(CustomerOrder order, CustomerOrder loaded, String action) {
         loaded.setUpdatedAt(LocalDateTime.now());
         loaded.setItems(order.getItems());
         loaded.setCustomer(order.getCustomer());
@@ -74,8 +78,12 @@ public class OrderService {
         loaded.setNotes(order.getNotes());
         loaded.setServiceMode(order.getServiceMode());
         loaded.setTotal(order.getTotal());
+        if (action.equalsIgnoreCase("Submit")) {
+            loaded.setStatus(OrderStatus.PENDING);
+        }
         CustomerOrder updated = customerOrderRepository.save(loaded);
         log.info("Updated order: {}", updated.getReference());
+
         updatePaymentIntent(updated);
         return updated;
     }
@@ -265,7 +273,7 @@ public class OrderService {
             case "Delete" -> deleteOrder(byReference);
             default -> throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Action not supported");
         }
-        if ( !StringUtils.equalsIgnoreCase("Delete", action)){
+        if (!StringUtils.equalsIgnoreCase("Delete", action)) {
             customerOrderRepository.save(byReference);
             log.info("Order {} status updated to {}", reference, byReference.getStatus().name());
         }
@@ -273,7 +281,7 @@ public class OrderService {
     }
 
     private void deleteOrder(CustomerOrder order) {
-        if ( order.getStatus() == OrderStatus.DRAFT ||  order.getStatus() == OrderStatus.CANCELLED){
+        if (order.getStatus() == OrderStatus.DRAFT || order.getStatus() == OrderStatus.CANCELLED) {
             customerOrderRepository.delete(order);
             log.info("Order {} has been deleted", order.getReference());
         }
