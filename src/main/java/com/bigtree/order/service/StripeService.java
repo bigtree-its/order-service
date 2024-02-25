@@ -87,6 +87,7 @@ public class StripeService {
                         .build();
         try {
             PaymentIntent created = PaymentIntent.create(params);
+            log.info("Created new payment intent in Stripe "+ created.getId());
             return saveNewLocalPaymentIntent(request, created);
         } catch (StripeException e) {
             log.error("Unable to create payment intent {}", e.getMessage());
@@ -151,7 +152,7 @@ public class StripeService {
                 .status(stripeIntent.getStatus())
                 .supplier(request.getSupplierId())
                 .build());
-        log.info("New LocalPaymentIntent is created for order {}" , newLocalPaymentIntent.getOrderReference());
+        log.info("Created payment intent copy in local for order {}" , newLocalPaymentIntent.getOrderReference());
         return newLocalPaymentIntent;
     }
 

@@ -3,6 +3,7 @@ package com.bigtree.order.service;
 import com.bigtree.order.config.ResourcesConfig;
 import com.bigtree.order.helper.EmailContentHelper;
 import com.bigtree.order.model.CustomerOrder;
+import com.bigtree.order.model.LocalPaymentIntent;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -61,4 +62,24 @@ public class EmailService {
 
     }
 
+    public void sendPaymentLink(CustomerOrder order, LocalPaymentIntent paymentIntent) {
+        log.info("Sending payment link to customer {}", order.getCustomer().getEmail());
+        final MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = null;
+        try {
+            helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setTo(order.getCustomer().getEmail());
+            helper.setSubject("Accepted. Your Zuvai Order #"+ order.getReference());
+            Map<String, Object> params = new HashMap<>();
+            params.put("order", order);
+            params.put("customer", order.getCustomer());
+            params.put("supplier", order.getSupplier());
+            params.put("paymentIntentId", paymentIntent.getId());
+            helper.setText(emailContentHelper.build("payment-link", params), true);
+            javaMailSender.send(mimeMessage);
+            log.info("Payment link has been sent to {}", order.getCustomer().getEmail());
+        } catch (MessagingException e) {
+            log.info("Exception while sending payment link email to {}", order.getCustomer().getEmail());
+        }
+    }
 }

@@ -45,7 +45,7 @@ public class OrderService {
         if (StringUtils.isEmpty(order.getReference())) {
             String salt = RandomStringUtils.random(6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
             order.setReference(salt);
-            if (action.equalsIgnoreCase("Submit")) {
+            if (StringUtils.equalsIgnoreCase("Submit", action)) {
                 order.setStatus(OrderStatus.PENDING);
             } else {
                 order.setStatus(OrderStatus.DRAFT);
@@ -58,7 +58,7 @@ public class OrderService {
             CustomerOrder loaded = customerOrderRepository.findByReference(order.getReference());
             if (loaded != null) {
                 log.info("Order {} already exist. Updating", loaded.getReference());
-                response = updateOrder(order, loaded);
+                response = updateOrder(order, loaded, action);
             } else {
                 log.error("Unable to update order with reference {}. Order not found", order.getReference());
             }
@@ -78,13 +78,14 @@ public class OrderService {
         loaded.setNotes(order.getNotes());
         loaded.setServiceMode(order.getServiceMode());
         loaded.setTotal(order.getTotal());
-        if (action.equalsIgnoreCase("Submit")) {
+        if (StringUtils.equalsIgnoreCase("Submit", action)) {
             loaded.setStatus(OrderStatus.PENDING);
         }
         CustomerOrder updated = customerOrderRepository.save(loaded);
         log.info("Updated order: {}", updated.getReference());
-
-        updatePaymentIntent(updated);
+        if (loaded.getStatus() != OrderStatus.DRAFT) {
+            updatePaymentIntent(updated);
+        }
         return updated;
     }
 
@@ -265,7 +266,7 @@ public class OrderService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Order not found");
         }
         switch (action) {
-            case "Accept" -> byReference.setStatus(OrderStatus.ACCEPTED);
+            case "Accept" -> acceptOrder(byReference);
             case "Submit" -> byReference.setStatus(OrderStatus.PENDING);
             case "Cancel" -> byReference.setStatus(OrderStatus.CANCELLED);
             case "Reject" -> byReference.setStatus(OrderStatus.REJECTED);
@@ -278,6 +279,20 @@ public class OrderService {
             log.info("Order {} status updated to {}", reference, byReference.getStatus().name());
         }
         return byReference;
+    }
+
+    private void acceptOrder(CustomerOrder order) {
+        order.setStatus(OrderStatus.ACCEPTED);
+        customerOrderRepository.save(order);
+        log.info("Order {} is accepted by Chef {}", order.getReference(), order.getSupplier().get_id());
+        LocalPaymentIntent paymentIntent = stripeService.createPaymentIntent(PaymentIntentRequest.builder()
+                .orderReference(order.getReference())
+                .amount(order.getTotal())
+                .currency(order.getCurrency())
+                .customerEmail(order.getCustomer().getEmail())
+                .supplierId(order.getSupplier().get_id())
+                .build());
+        emailService.sendPaymentLink(order, paymentIntent);
     }
 
     private void deleteOrder(CustomerOrder order) {
