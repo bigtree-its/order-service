@@ -1,29 +1,29 @@
 package com.bigtree.order.repository;
 
-import com.bigtree.order.model.LocalPaymentIntent;
+import com.bigtree.order.model.Payment;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 
 /**
- * Repository class for <code>LocalPaymentIntent</code> domain objects All method names are compliant
+ * Repository class for <code>Payment</code> domain objects All method names are compliant
  * with Spring Data naming conventions so this interface can easily be extended for Spring
  * Data. See:
  * https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.query-methods.query-creation
  *
  * @author Nav
  */
-public interface PaymentRepository extends MongoRepository<LocalPaymentIntent, String> {
+public interface PaymentRepository extends MongoRepository<Payment, String> {
 
-    LocalPaymentIntent findFirstByOrderReference(String orderReference);
+    Payment findFirstByOrderReference(String orderReference);
 
-    LocalPaymentIntent findFirstByIntentId(String intentId);
+    Payment findFirstByIntentId(String intentId);
 
-    LocalPaymentIntent findFirstByClientSecret(String clientSecret);
+    Payment findFirstByClientSecret(String clientSecret);
 
-    List<LocalPaymentIntent> findByCustomer(String customer);
+    List<Payment> findByCustomer(String customer);
 
-    List<LocalPaymentIntent> findBySupplier(String supplier);
+    List<Payment> findBySupplier(String supplier);
 
-    List<LocalPaymentIntent> findByStatus(String status);
+    List<Payment> findByStatus(String status);
 }

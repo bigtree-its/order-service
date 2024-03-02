@@ -4,6 +4,9 @@ jasypt:
   encryptor:
     password: projectbigtree
 
+server:
+  port: 8082
+  
 spring:
   data:
     mongodb:

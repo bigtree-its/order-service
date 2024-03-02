@@ -1,6 +1,7 @@
 package com.bigtree.order.service;
 
-import com.bigtree.order.model.LocalPaymentIntent;
+import com.bigtree.order.exception.ApiException;
+import com.bigtree.order.model.Payment;
 import com.bigtree.order.model.PaymentIntentRequest;
 import com.bigtree.order.repository.PaymentRepository;
 import com.stripe.Stripe;
@@ -12,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -38,45 +40,59 @@ public class StripeService {
     @Autowired
     PaymentRepository paymentRepository;
 
-    public List<LocalPaymentIntent> lookup(String orderReference, String status) {
-        List<LocalPaymentIntent> result = new ArrayList<>();
-        if ( StringUtils.isNotEmpty(orderReference)){
-            log.info("Retrieving localPaymentIntent for orderReference {}", orderReference);
-            LocalPaymentIntent localPaymentIntent = paymentRepository.findFirstByOrderReference(orderReference);
-            if ( localPaymentIntent != null){
-                result.add(localPaymentIntent);
+    public List<Payment> lookup(String orderReference, String status, String intent) {
+        List<Payment> result = new ArrayList<>();
+        if (StringUtils.isNotEmpty(orderReference)) {
+            log.info("Retrieving payment for orderReference {}", orderReference);
+            Payment payment = paymentRepository.findFirstByOrderReference(orderReference);
+            if (payment != null) {
+                result.add(payment);
             }
         }
-        if ( StringUtils.isNotEmpty(status)){
-            log.info("Retrieving PaymentIntent for status {}", status);
-            List<LocalPaymentIntent> list = paymentRepository.findByStatus(status);
-            if ( !CollectionUtils.isEmpty(list)){
+        if (StringUtils.isNotEmpty(intent)) {
+            log.info("Retrieving payment intent for id {}", intent);
+            Payment payment = paymentRepository.findFirstByIntentId(intent);
+            if (payment != null) {
+                result.add(payment);
+            }
+        }
+        if (StringUtils.isNotEmpty(status)) {
+            log.info("Retrieving PaymentIntent with status {}", status);
+            List<Payment> list = paymentRepository.findByStatus(status);
+            if (!CollectionUtils.isEmpty(list)) {
                 return list;
             }
         }
-        if ( CollectionUtils.isEmpty(result)){
+        if (CollectionUtils.isEmpty(result)) {
             return paymentRepository.findAll();
         }
         return result;
     }
 
-    public LocalPaymentIntent createPaymentIntent(PaymentIntentRequest request) {
+    public Payment createPaymentIntent(PaymentIntentRequest request) {
         Stripe.apiKey = stripeKey;
 
-        final LocalPaymentIntent loadedLocalPaymentIntent = paymentRepository.findFirstByOrderReference(request.getOrderReference());
-        BigDecimal reqAmount = request.getAmount().multiply(hundred);
-        if (loadedLocalPaymentIntent != null && loadedLocalPaymentIntent.getAmount().compareTo(reqAmount) != 0) {
-            log.info("Payment Intent already found, but amount changed from {} to {}",loadedLocalPaymentIntent.getAmount(), reqAmount);
-            return updateStripePaymentIntent(request, loadedLocalPaymentIntent);
+        Payment payment = paymentRepository.findFirstByOrderReference(request.getOrderReference());
+        if ( payment != null){
+            final PaymentIntent paymentIntent = retrieveStripePaymentIntent(payment.getIntentId());
+            if ( paymentIntent == null){
+                return createStripePaymentIntent(request);
+            }else{
+                if (paymentIntent.getStatus().equalsIgnoreCase("succeeded")) {
+                    log.error("Existing intent {} in stripe is succeeded. Cannot update anymore.", paymentIntent.getId());
+                    throw  new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Order is fully Paid. Cannot update further");
+                }else{
+                    updatePaymentIntent(request, paymentIntent);
+                }
+            }
+        }else{
+            payment =  createStripePaymentIntent(request);
         }
-        if (loadedLocalPaymentIntent != null && loadedLocalPaymentIntent.getAmount().compareTo(reqAmount) == 0) {
-            log.info("Payment Intent already found, no update required for {}", request.getOrderReference());
-            return loadedLocalPaymentIntent;
-        }
-        log.info("Payment Intent not exist for order {}", request.getOrderReference());
-        final BigDecimal stripeAmount = request.getAmount().multiply(hundred);
+        return payment;
+    }
 
-        // Create new Payment Intent
+    private Payment createStripePaymentIntent(PaymentIntentRequest request) {
+        final BigDecimal stripeAmount = request.getAmount().multiply(hundred);
         PaymentIntentCreateParams params =
                 PaymentIntentCreateParams.builder()
                         .setCurrency(currency)
@@ -87,20 +103,17 @@ public class StripeService {
                         .build();
         try {
             PaymentIntent created = PaymentIntent.create(params);
-            log.info("Created new payment intent in Stripe "+ created.getId());
+            log.info("Created new payment intent in Stripe " + created.getId());
             return saveNewLocalPaymentIntent(request, created);
         } catch (StripeException e) {
             log.error("Unable to create payment intent {}", e.getMessage());
-            return LocalPaymentIntent.builder()
-                    .error(true)
+            return Payment.builder()
                     .errorMessage(e.getMessage())
                     .build();
         }
-
     }
 
-    public LocalPaymentIntent updateStripePaymentIntent(PaymentIntentRequest request, LocalPaymentIntent loadedLocalPaymentIntent) {
-        LocalPaymentIntent updatedLocalPaymentIntent = null;
+    public void updatePaymentIntent(PaymentIntentRequest request, PaymentIntent paymentIntent) {
         try {
             final BigDecimal stripeAmount = request.getAmount().multiply(hundred);
             Map<String, Object> metadata = new HashMap<>();
@@ -108,75 +121,60 @@ public class StripeService {
             Map<String, Object> params = new HashMap<>();
             params.put("metadata", metadata);
             params.put("amount", stripeAmount.longValue());
-            final PaymentIntent paymentIntent = PaymentIntent.retrieve(loadedLocalPaymentIntent.getIntentId());
-            if ( paymentIntent.getStatus().equalsIgnoreCase("succeeded")){
-                log.error("Existing intent {} in stripe is succeeded. Cannot update anymore.", paymentIntent.getId());
-                return LocalPaymentIntent.builder()
-                        .error(true)
-                        .errorMessage("Existing intent for this order reference succeeded. Cannot update.")
-                        .build();
-            }
-            PaymentIntent updated = paymentIntent.update(params);
-            log.info("Payment Intent is updated with new amount {} for order {}", stripeAmount, request.getOrderReference());
-            updatedLocalPaymentIntent = updateLocalPaymentIntent(request, updated, loadedLocalPaymentIntent);
+            paymentIntent.update(params);
+            log.info("Payment Intent {} is updated for order {}", paymentIntent.getId(), request.getOrderReference());
         } catch (StripeException e) {
-            log.error("Error while updating LocalPaymentIntent Intent. {}", e.getMessage());
-            return LocalPaymentIntent.builder()
-                    .error(true)
-                    .errorMessage(e.getMessage())
-                    .build();
+            throw  new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", e.getMessage());
         }
-        return updatedLocalPaymentIntent;
     }
 
-    private LocalPaymentIntent updateLocalPaymentIntent(PaymentIntentRequest request, PaymentIntent stripeIntent, LocalPaymentIntent loadedLocalPaymentIntent) {
-        log.info("LocalPaymentIntent already found. Updating for {}", request.getOrderReference());
-        loadedLocalPaymentIntent.setAmount(BigDecimal.valueOf(stripeIntent.getAmount()));
-        loadedLocalPaymentIntent.setPaymentMethod(stripeIntent.getPaymentMethod());
-        loadedLocalPaymentIntent.setStatus(stripeIntent.getStatus());
-        loadedLocalPaymentIntent.setCustomer(request.getCustomerEmail());
-        final LocalPaymentIntent updatedLocalPaymentIntent = paymentRepository.save(loadedLocalPaymentIntent);
-        log.info("LocalPaymentIntent is updated for {} ", updatedLocalPaymentIntent.getOrderReference());
-        return updatedLocalPaymentIntent;
-    }
 
-    private LocalPaymentIntent saveNewLocalPaymentIntent(PaymentIntentRequest request, PaymentIntent stripeIntent) {
-        final LocalPaymentIntent newLocalPaymentIntent = paymentRepository.save(LocalPaymentIntent.builder()
+    private Payment saveNewLocalPaymentIntent(PaymentIntentRequest request, PaymentIntent stripeIntent) {
+        final Payment newPayment = paymentRepository.save(Payment.builder()
                 .intentId(stripeIntent.getId())
                 .orderReference(request.getOrderReference())
-                .customer(request.getCustomerEmail())
-                .amount(BigDecimal.valueOf(stripeIntent.getAmount()))
-                .paymentMethod(stripeIntent.getPaymentMethodTypes().get(0))
-                .clientSecret(stripeIntent.getClientSecret())
-                .currency(stripeIntent.getCurrency())
-                .status(stripeIntent.getStatus())
-                .supplier(request.getSupplierId())
                 .build());
-        log.info("Created payment intent copy in local for order {}" , newLocalPaymentIntent.getOrderReference());
-        return newLocalPaymentIntent;
+        log.info("Created payment intent copy in local for order {}", newPayment.getOrderReference());
+        return newPayment;
     }
 
-    public LocalPaymentIntent getPaymentIntentById(String intentId) {
-        LocalPaymentIntent localPaymentIntent = null;
-        if ( StringUtils.isNoneEmpty(intentId)){
-            log.info("Retrieving localPaymentIntent for intentId {}", intentId);
-            localPaymentIntent = paymentRepository.findFirstByIntentId(intentId);
+    public Payment retrievePayment(String intentId) {
+
+        if (StringUtils.isEmpty(intentId)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Intent ID is mandatory");
         }
-        if ( localPaymentIntent!= null){
-            log.info("Found an intent with id {}", localPaymentIntent.getIntentId());
+        final PaymentIntent paymentIntent = retrieveStripePaymentIntent(intentId);
+        final Payment payment = paymentRepository.findFirstByIntentId(intentId);
+        if ( paymentIntent != null){
+            payment.setAmount(BigDecimal.valueOf(paymentIntent.getAmount()));
+            payment.setPaymentMethod(paymentIntent.getPaymentMethod());
+            payment.setCurrency(paymentIntent.getCurrency());
+            payment.setStatus(paymentIntent.getStatus());
+            payment.setClientSecret(paymentIntent.getClientSecret());
+            payment.setError(paymentIntent.getLastPaymentError() != null? paymentIntent.getLastPaymentError() .getMessage(): null);
+            payment.setLiveMode(paymentIntent.getLivemode());
         }
-       
-        return localPaymentIntent;
+        return payment;
     }
 
-    public LocalPaymentIntent updatePaymentIntent(String id, String status) {
-        LocalPaymentIntent byId = getPaymentIntentById(id);
-        if ( byId != null){
-            byId.setStatus(status);
-            paymentRepository.save(byId);
-            log.info("Payment intent status updated to {}", status);
-            return byId;
+    public PaymentIntent retrieveStripePaymentIntent(String id) {
+        log.info("Retrieving payment intent from Stripe for {}", id);
+        Stripe.apiKey = stripeKey;
+        try {
+            final PaymentIntent paymentIntent = PaymentIntent.retrieve(id);
+            if (paymentIntent != null) {
+                log.info("Found Stripe payment intent for {}", paymentIntent.getId());
+                return paymentIntent;
+            } else {
+                log.info("Could not find Stripe payment intent for {}", id);
+            }
+        } catch (StripeException e) {
+            log.error("Exception while retrieving stripe intent {}", e.getMessage());
         }
         return null;
+    }
+
+    public void deleteAll() {
+        paymentRepository.deleteAll();
     }
 }

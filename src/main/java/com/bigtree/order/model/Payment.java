@@ -11,7 +11,7 @@ import java.util.Map;
 @Document(collection = "payments")
 @Data
 @Builder
-public class LocalPaymentIntent {
+public class Payment {
 
     @Id
     private String id;
@@ -22,7 +22,7 @@ public class LocalPaymentIntent {
     private String orderReference;
     private String clientSecret;
     private String currency;
-    private boolean error;
+    private String error;
     private boolean liveMode;
     private String errorMessage;
     private String paymentMethod;

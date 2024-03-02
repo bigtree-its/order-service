@@ -1,6 +1,6 @@
 package com.bigtree.order.controller;
 
-import com.bigtree.order.model.LocalPaymentIntent;
+import com.bigtree.order.model.Payment;
 import com.bigtree.order.model.PaymentIntentRequest;
 import com.bigtree.order.service.StripeService;
 import lombok.extern.slf4j.Slf4j;
@@ -22,33 +22,33 @@ public class StripeController {
     StripeService stripeService;
 
     @PostMapping("/payment-intent")
-    public ResponseEntity<LocalPaymentIntent> createPaymentIntent(@RequestBody PaymentIntentRequest request) {
+    public ResponseEntity<Payment> createPaymentIntent(@RequestBody PaymentIntentRequest request) {
         log.info("Request: createPaymentIntent: Amount:{}, Order:{}, Customer: {}", request.getAmount(), request.getOrderReference(), request.getCustomerEmail());
-        LocalPaymentIntent response = stripeService.createPaymentIntent(request);
-        return ResponseEntity.ok(response);
-    }
-
-    @PutMapping("/payment-intent/{id}")
-    public ResponseEntity<LocalPaymentIntent> updatePaymentIntent(@PathVariable  String id, @RequestParam(required = false, value = "status") String status) {
-        log.info("Request received to update Payment Intent {}, status {}", id, status);
-        LocalPaymentIntent response = stripeService.updatePaymentIntent(id, status);
+        Payment response = stripeService.createPaymentIntent(request);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/payment-intent")
-    public ResponseEntity<List<LocalPaymentIntent>> getAll(@RequestParam(required = false, value = "orderReference") String orderReference,
-                                                           @RequestParam(required = false, value = "status") String status) {
+    public ResponseEntity<List<Payment>> getAll(@RequestParam(required = false, value = "ref") String ref,
+                                                @RequestParam(required = false, value = "intent") String intent,
+                                                @RequestParam(required = false, value = "status") String status) {
         log.info("Request: Lookup payment intents");
-        List<LocalPaymentIntent> response = stripeService.lookup(orderReference, status);
+        List<Payment> response = stripeService.lookup(ref, status, intent);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/payment-intent/{intentId}")
-    public ResponseEntity<LocalPaymentIntent> getSingle(@PathVariable String intentId) {
+    public ResponseEntity<Payment> getSingle(@PathVariable String intentId) {
         log.info("Request: getPaymentIntent with intent id ");
-        LocalPaymentIntent response = stripeService.getPaymentIntentById(intentId);
+        Payment response = stripeService.retrievePayment(intentId);
         return ResponseEntity.ok(response);
     }
 
+    @DeleteMapping("/payment-intent")
+    public ResponseEntity<Void> deleteAllOrders() {
+        log.info("Request to delete all payments");
+        stripeService.deleteAll();
+        return ResponseEntity.accepted().build();
+    }
 
 }

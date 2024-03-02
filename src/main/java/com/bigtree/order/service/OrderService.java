@@ -4,6 +4,7 @@ import com.bigtree.order.exception.ApiException;
 import com.bigtree.order.model.*;
 import com.bigtree.order.repository.PaymentRepository;
 import com.bigtree.order.repository.CustomerOrderRepository;
+import com.stripe.model.PaymentIntent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -45,15 +46,18 @@ public class OrderService {
         if (StringUtils.isEmpty(order.getReference())) {
             String salt = RandomStringUtils.random(6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
             order.setReference(salt);
-            if (StringUtils.equalsIgnoreCase("Submit", action)) {
-                order.setStatus(OrderStatus.PENDING);
-            } else {
-                order.setStatus(OrderStatus.DRAFT);
-            }
+            order.setStatus(OrderStatus.Draft);
             order.setDateCreated(LocalDate.now());
             order.setCreatedAt(LocalDateTime.now());
             response = customerOrderRepository.save(order);
             log.info("Saved new order: {}, Ref: {}", response.get_id(), response.getReference());
+            if (StringUtils.isNotEmpty(action)) {
+                action(response.getReference(), action);
+            } else {
+                final Map<String, Object> params = buildEmailParams(response);
+                final Email email = buildEmail(response, params);
+                emailService.sendMail(email);
+            }
         } else {
             CustomerOrder loaded = customerOrderRepository.findByReference(order.getReference());
             if (loaded != null) {
@@ -78,51 +82,21 @@ public class OrderService {
         loaded.setNotes(order.getNotes());
         loaded.setServiceMode(order.getServiceMode());
         loaded.setTotal(order.getTotal());
-        if (StringUtils.equalsIgnoreCase("Submit", action)) {
-            loaded.setStatus(OrderStatus.PENDING);
-        }
         CustomerOrder updated = customerOrderRepository.save(loaded);
         log.info("Updated order: {}", updated.getReference());
-        if (loaded.getStatus() != OrderStatus.DRAFT) {
-            updatePaymentIntent(updated);
+        if (StringUtils.isNotEmpty(action)) {
+            action(updated.getReference(), action);
         }
         return updated;
     }
 
-    private void updatePaymentIntent(CustomerOrder order) {
-        stripeService.createPaymentIntent(PaymentIntentRequest.builder()
-                .customerEmail(order.getCustomer().getEmail())
-                .amount(order.getTotal())
-                .currency(order.getCurrency())
-                .orderReference(order.getReference())
-                .build());
-    }
-
-    public List<CustomerOrder> findOrdersWithQuery(Map<String, String> qParams) {
-        final List<CustomerOrder> result = new ArrayList<>();
-        qParams.forEach((k, v) -> {
-            if (k.equalsIgnoreCase("customerEmail")) {
-                log.info("Looking for orders with customerEmail {}", v);
-                result.addAll(customerOrderRepository.findByCustomerEmail(v));
-            } else if (k.equalsIgnoreCase("reference")) {
-                log.info("Looking for orders with reference {}", v);
-                result.add(customerOrderRepository.findByReference(v));
-            } else if (k.equalsIgnoreCase("status")) {
-                log.info("Looking for orders with status {}", v);
-                result.addAll(customerOrderRepository.findByStatus(OrderStatus.valueOf(v)));
-            }
-
-        });
-        return result;
-    }
-
-    public List<CustomerOrder> search(String intentId, String reference, String customer, String supplier,
+      public List<CustomerOrder> search(String intentId, String reference, String customer, String supplier,
                                       LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
         List<CustomerOrder> result = new ArrayList<>();
         Query query = new Query();
         if (StringUtils.isNotEmpty(intentId)) {
             log.info("Searching order with payment intent {}", intentId);
-            LocalPaymentIntent intent = paymentRepository.findFirstByIntentId(intentId);
+            Payment intent = paymentRepository.findFirstByIntentId(intentId);
             if (intent != null) {
                 CustomerOrder order = customerOrderRepository.findByReference(intent.getOrderReference());
                 if (order != null) {
@@ -142,7 +116,7 @@ public class OrderService {
             query.addCriteria(Criteria.where("customer.email").is(customer));
         }
         if (StringUtils.isNotEmpty(supplier)) {
-            query.addCriteria(Criteria.where("supplier.email").is(supplier));
+            query.addCriteria(Criteria.where("supplier._id").is(supplier));
         }
         if (date != null) {
             query.addCriteria(Criteria.where("dateCreated").is(date));
@@ -161,57 +135,13 @@ public class OrderService {
         return result;
     }
 
-    public CustomerOrder updateStatus(String paymentIntentId, String status) {
-        LocalPaymentIntent byIntentId = paymentRepository.findFirstByIntentId(paymentIntentId);
-        if (byIntentId != null) {
-            byIntentId.setStatus(status);
-            paymentRepository.save(byIntentId);
-            CustomerOrder order = customerOrderRepository.findByReference(byIntentId.getOrderReference());
-            if (order != null) {
-                log.info("Order found with reference {}", order.getReference());
-                if (status.equalsIgnoreCase("succeeded")) {
-                    order.setStatus(OrderStatus.PAID);
-                } else {
-                    order.setStatus(OrderStatus.PAYMENT_ERROR);
-                }
-                order.setUpdatedAt(LocalDateTime.now());
-                customerOrderRepository.save(order);
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        sendEmail(order);
-                    }
-                }).start();
-                return order;
-            }
-        }
-        log.info("Cannot locate payment intent {}", paymentIntentId);
-        return null;
-    }
-
-    private void sendEmail(CustomerOrder order) {
-        String message = "";
-        if (order.getStatus() == OrderStatus.PAID) {
-            message = "We have received your payment.";
-        } else if (order.getStatus() == OrderStatus.PAYMENT_ERROR) {
-            message = "There is an issue with your payment";
-        }
-        String subject = "Your Chumma order " + order.getReference();
-        Map<String, Object> body = new HashMap<>();
-        body.put("order", order);
-        body.put("customer", order.getCustomer());
-        body.put("items", order.getItems());
-        body.put("message", message);
-        body.put("supplier", order.getSupplier());
-        emailService.sendMail(order.getCustomer().getEmail(), subject, "order-update", body);
-    }
 
     private CustomerOrder findByReference(String reference) {
         return customerOrderRepository.findByReference(reference);
     }
 
     private CustomerOrder findByPaymentIntentId(String paymentIntentId) {
-        LocalPaymentIntent paymentIntent = paymentRepository.findFirstByIntentId(paymentIntentId);
+        Payment paymentIntent = paymentRepository.findFirstByIntentId(paymentIntentId);
         if (paymentIntent != null) {
             return findByReference(paymentIntent.getOrderReference());
         }
@@ -224,9 +154,6 @@ public class OrderService {
         if (StringUtils.isEmpty(request.getReference()) && StringUtils.isEmpty(request.getPaymentIntentId())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Either order reference or payment intent id is mandatory");
         }
-        if (StringUtils.isNotEmpty(request.getPaymentIntentId()) && StringUtils.isNotEmpty(request.getPaymentStatus())) {
-            return updateStatus(request.getPaymentIntentId(), request.getPaymentStatus());
-        }
         CustomerOrder order = null;
         if (StringUtils.isNotEmpty(request.getReference())) {
             order = findByReference(request.getReference());
@@ -235,7 +162,7 @@ public class OrderService {
             order = findByPaymentIntentId(request.getPaymentIntentId());
         }
         if (order == null) {
-            log.error("Cannot find an order");
+            log.error("Cannot find an order {}", request.getReference());
             throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Either valid order reference or payment intent id is mandatory");
         }
         if (StringUtils.isNotEmpty(request.getChefNotes())) {
@@ -248,7 +175,7 @@ public class OrderService {
             order.setCustomerRating(request.getCustomerRating());
         }
         if (request.getExpectedCollectionDate() != null) {
-            order.setCollectBy(request.getExpectedCollectionDate());
+            order.setCollectionDate(request.getExpectedCollectionDate());
         }
         if (request.getExpectedDeliveryDate() != null) {
             order.setExpectedDeliveryDate(request.getExpectedDeliveryDate());
@@ -267,39 +194,183 @@ public class OrderService {
         }
         switch (action) {
             case "Accept" -> acceptOrder(byReference);
-            case "Submit" -> byReference.setStatus(OrderStatus.PENDING);
-            case "Cancel" -> byReference.setStatus(OrderStatus.CANCELLED);
-            case "Reject" -> byReference.setStatus(OrderStatus.REJECTED);
-            case "Refund" -> byReference.setStatus(OrderStatus.REFUNDED);
+            case "Submit" -> submitOrder(byReference);
+            case "Cancel" -> cancelOrder(byReference);
+            case "Reject" -> rejectOrder(byReference);
+            case "Pay" -> payment(byReference);
+            case "Refund" -> refundOrder(byReference);
             case "Delete" -> deleteOrder(byReference);
             default -> throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Action not supported");
         }
         if (!StringUtils.equalsIgnoreCase("Delete", action)) {
             customerOrderRepository.save(byReference);
-            log.info("Order {} status updated to {}", reference, byReference.getStatus().name());
+            log.info("Order {} status {}", reference, byReference.getStatus().name());
         }
         return byReference;
     }
 
-    private void acceptOrder(CustomerOrder order) {
-        order.setStatus(OrderStatus.ACCEPTED);
-        customerOrderRepository.save(order);
-        log.info("Order {} is accepted by Chef {}", order.getReference(), order.getSupplier().get_id());
-        LocalPaymentIntent paymentIntent = stripeService.createPaymentIntent(PaymentIntentRequest.builder()
-                .orderReference(order.getReference())
-                .amount(order.getTotal())
-                .currency(order.getCurrency())
-                .customerEmail(order.getCustomer().getEmail())
-                .supplierId(order.getSupplier().get_id())
-                .build());
-        emailService.sendPaymentLink(order, paymentIntent);
-    }
-
-    private void deleteOrder(CustomerOrder order) {
-        if (order.getStatus() == OrderStatus.DRAFT || order.getStatus() == OrderStatus.CANCELLED) {
-            customerOrderRepository.delete(order);
-            log.info("Order {} has been deleted", order.getReference());
+    private void refundOrder(CustomerOrder order) {
+        if (order.getStatus() == OrderStatus.Paid) {
+            order.setStatus(OrderStatus.Cancelled);
+            order.setDateRefunded(LocalDateTime.now());
+            final Map<String, Object> params = buildEmailParams(order);
+            final Email email = buildEmail(order, params);
+            emailService.sendMail(email);
+        } else {
+            log.error("Order {} cannot be cancelled at this stage. {}", order.getReference(), order.getStatus().name());
         }
     }
 
+    private void payment(CustomerOrder order) {
+        Payment localIntent = paymentRepository.findFirstByOrderReference(order.getReference());
+        if (localIntent != null) {
+            final PaymentIntent paymentIntent = stripeService.retrieveStripePaymentIntent(localIntent.getIntentId());
+            if (paymentIntent != null) {
+                if (paymentIntent.getStatus().equalsIgnoreCase("Succeeded")) {
+                    order.setStatus(OrderStatus.Paid);
+                    order.setDatePaid(LocalDateTime.now());
+                    final Map<String, Object> params = buildEmailParams(order);
+                    final Email email = buildEmail(order, params);
+                    emailService.sendMail(email);
+                }
+            }
+        }
+    }
+
+    private void cancelOrder(CustomerOrder order) {
+        if (order.getStatus() == OrderStatus.Pending) {
+            order.setStatus(OrderStatus.Cancelled);
+            order.setDateCancelled(LocalDateTime.now());
+            final Map<String, Object> params = buildEmailParams(order);
+            final Email email = buildEmail(order, params);
+            emailService.sendMail(email);
+        } else {
+            log.error("Order {} cannot be cancelled at this stage. {}", order.getReference(), order.getStatus().name());
+        }
+    }
+
+    private void rejectOrder(CustomerOrder order) {
+        if (order.getStatus() == OrderStatus.Pending) {
+            order.setStatus(OrderStatus.Rejected);
+            order.setDateRejected(LocalDateTime.now());
+            final Map<String, Object> params = buildEmailParams(order);
+            final Email email = buildEmail(order, params);
+            emailService.sendMail(email);
+        } else {
+            log.error("Order {} cannot be rejected at this stage. {}", order.getReference(), order.getStatus().name());
+        }
+    }
+
+    private void submitOrder(CustomerOrder order) {
+        if (order.getStatus() == OrderStatus.Draft) {
+            order.setStatus(OrderStatus.Pending);
+            order.setDateSubmitted(LocalDateTime.now());
+            final Map<String, Object> params = buildEmailParams(order);
+            final Email email = buildEmail(order, params);
+            emailService.sendMail(email);
+        } else {
+            log.error("Order {} cannot be submitted at this stage. {}", order.getReference(), order.getStatus().name());
+        }
+    }
+
+    private void acceptOrder(CustomerOrder order) {
+        if (order.getStatus() == OrderStatus.Pending) {
+            order.setStatus(OrderStatus.Accepted);
+            order.setDateAccepted(LocalDateTime.now());
+            log.info("Order {} is accepted by Chef {}", order.getReference(), order.getSupplier().get_id());
+            Payment paymentIntent = stripeService.createPaymentIntent(PaymentIntentRequest.builder()
+                    .orderReference(order.getReference())
+                    .amount(order.getTotal())
+                    .currency(order.getCurrency())
+                    .customerEmail(order.getCustomer().getEmail())
+                    .supplierId(order.getSupplier().get_id())
+                    .build());
+            final Map<String, Object> params = buildEmailParams(order);
+            params.put("linkUrl", "http://localhost:4200/make_payment?ref=" + order.getReference() + "&intent=" + paymentIntent.getIntentId());
+            params.put("linkText", "Make Payment");
+            final Email email = buildEmail(order, params);
+            emailService.sendMail(email);
+        } else {
+            log.error("Order {} cannot accepted at this stage. {}", order.getReference(), order.getStatus().name());
+        }
+    }
+
+    private Email buildEmail(CustomerOrder order, Map<String, Object> params) {
+        final Email email = Email.builder()
+                .to(order.getCustomer().getEmail())
+                .subject(order.getStatus() + ": Your Zuvai order " + order.getReference())
+                .params(params)
+                .build();
+        return email;
+    }
+
+    private Map<String, Object> buildEmailParams(CustomerOrder order) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("message", emailMessage(order));
+        params.put("order", order);
+        params.put("status", order.getStatus().name());
+        params.put("serviceMode", order.getServiceMode().name());
+        params.put("customer", order.getCustomer());
+        params.put("items", order.getItems());
+        params.put("supplier", order.getSupplier());
+        return params;
+    }
+
+    private String emailMessage(CustomerOrder order) {
+        String message = "";
+        switch (order.getStatus()) {
+            case Draft -> {
+                message = "Your order still in Draft state. Please submit to chef.";
+            }
+            case Created -> {
+            }
+            case Paid -> {
+                message = "Your order has been Paid. We will notify you once your order prepared by Chef.";
+            }
+            case In_Progress -> {
+                message = "Your order is in progress";
+            }
+            case Pending -> {
+                message = "Your order has been submitted to Chef and waiting to be accepted.";
+            }
+            case Accepted -> {
+                message = "Your order has been accepted by Chef. Please make a payment using below link.";
+            }
+            case Collected -> {
+                message = "Your have collected your order.";
+            }
+            case Cancelled -> {
+                message = "Your order has been cancelled.";
+            }
+            case Refunded -> {
+                message = "Your order has been refunded.";
+            }
+            case Delivered -> {
+                message = "Your order has been delivered.";
+            }
+            case Rejected -> {
+                message = "Sorry the chef is unable to accept your order at this point. Please see the notes from Chef.";
+            }
+            case Payment_Error -> {
+                message = "Sorry there was an payment error for your order. Please make a payment.";
+            }
+        }
+        return message;
+    }
+
+    private void deleteOrder(CustomerOrder order) {
+        if (order.getStatus() == OrderStatus.Draft || order.getStatus() == OrderStatus.Cancelled) {
+            customerOrderRepository.delete(order);
+            log.info("Order {} has been deleted", order.getReference());
+        } else {
+            log.info("Order {} cannot be deleted at this point {}", order.getReference(), order.getStatus().name());
+        }
+    }
+
+    public void deleteByRef(String ref) {
+        final CustomerOrder byReference = customerOrderRepository.findByReference(ref);
+        if (byReference != null) {
+            deleteOrder(byReference);
+        }
+    }
 }

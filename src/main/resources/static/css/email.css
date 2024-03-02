@@ -1,0 +1,141 @@
+ @import url('https://fonts.googleapis.com/css2?family=Limelight&display=swap');
+
+ body,
+        table,
+        td,
+        a {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        table,
+        td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+
+        img {
+            -ms-interpolation-mode: bicubic;
+        }
+
+        img {
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+
+        table {
+            border-collapse: collapse !important;
+        }
+
+        body {
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+
+        .main-body {
+            width: 600px;
+            margin: auto;
+        }
+
+        .banner {
+            height: 50px;
+            line-height: 50px;
+            padding: 10px 0;
+            width: 600px;
+            margin: auto;
+            font-family: "Limelight", sans-serif;
+            font-size: 30px;
+            color: #FF3333;
+            font-weight: 900;
+        }
+        .order-header{
+            padding: 10px 0;
+            font-size: 20px;
+            color: #222;
+            font-weight: 900;
+            border-bottom: 1px solid #f2f2f2;
+        }
+
+        .order-details {
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 24px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f2f2f2;
+        }
+
+        .supplier-section{
+            border-bottom: 1px solid #f2f2f2;
+            padding: 20px 0;
+            display:flex;
+            flex-direction: column;
+        }
+
+        .items-row {
+            margin-bottom: 10px;
+        }
+
+        .items-table-header {
+            border-bottom: 2px solid #eeeeee;
+            padding: 10px;
+            line-height: 30px;
+        }
+
+        .item {
+            line-height: 10px;
+        }
+
+        .summary-item-row {
+            line-height: 25px;
+        }
+
+        .summary-item-value {
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .total-section {
+            padding: 5px 10px;
+            width: 100%;
+        }
+
+        .delivery-date-section {
+            padding: 5px 0;
+        }
+
+        .greetings-section {
+            margin-top: 5px;
+        }
+
+        .footer-section {
+            margin-top: 20px;
+            font-size: small;
+        }
+
+        a[x-apple-data-detectors] {
+            color: inherit !important;
+            text-decoration: none !important;
+            font-size: inherit !important;
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            line-height: inherit !important;
+        }
+
+        @media screen and (max-width: 480px) {
+            .mobile-hide {
+                display: none !important;
+            }
+
+            .mobile-center {
+                text-align: center !important;
+            }
+        }
+
+        div[style*="margin: 16px 0;"] {
+            margin: 0 !important;
+        }

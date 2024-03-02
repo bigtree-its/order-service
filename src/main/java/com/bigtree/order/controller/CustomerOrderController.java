@@ -28,9 +28,6 @@ import java.util.Optional;
 @CrossOrigin(origins = "*")
 public class CustomerOrderController {
 
-    @Value("${application.send-email-confirmation}")
-    private boolean sendEmailConfirmation;
-
     @Autowired
     CustomerOrderRepository repository;
 
@@ -44,34 +41,31 @@ public class CustomerOrderController {
     OrderService orderService;
 
     @PostMapping("")
-    public ResponseEntity<CustomerOrder> create(@RequestBody CustomerOrder order, @RequestParam("action") String action) {
+    public ResponseEntity<CustomerOrder> create(@RequestBody CustomerOrder order, @RequestParam(value = "action", required = false) String action) {
         log.info("Request create order {}", order);
         orderValidator.validateOrder(order);
         final CustomerOrder saved = orderService.createOrder(order, action);
         if (saved != null) {
-            log.info("Order saved: {}", saved.getReference());
-            if (sendEmailConfirmation) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        sendOrderConfirmation(saved);
-                    }
-                }).start();
-            }
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } else {
             log.error("Order creation failed");
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).build();
         }
-
     }
 
     @GetMapping("")
-    public List<CustomerOrder> getAllOrders() {
-        log.info("Request to get all orders");
-        List<CustomerOrder> all = repository.findAll();
-        log.info("Returning {} customer orders", all.size());
-        return all;
+    public ResponseEntity<List<CustomerOrder>> getAllOrders(
+            @RequestParam(value = "intent", required = false) String intentId,
+            @RequestParam(value = "ref", required = false) String reference,
+            @RequestParam(value = "customer", required = false) String customer,
+            @RequestParam(value = "supplier", required = false) String supplier,
+            @RequestParam(value = "date", required = false) LocalDate date,
+            @RequestParam(value = "dateFrom", required = false) LocalDate dateFrom,
+            @RequestParam(value = "dateTo", required = false) LocalDate dateTo) {
+        log.info("Request to search orders");
+        final List<CustomerOrder> result = orderService.search(intentId, reference, customer, supplier, date, dateFrom, dateTo);
+        log.info("Returning {} orders for search", result.size());
+        return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("")
@@ -81,10 +75,10 @@ public class CustomerOrderController {
         return ResponseEntity.accepted().build();
     }
 
-    @DeleteMapping("/{orderId}")
-    public ResponseEntity<Void> deleteOne(@PathVariable("orderId") String id) {
-        log.info("Request delete one {}", id);
-        repository.deleteById(id);
+    @DeleteMapping("/{ref}")
+    public ResponseEntity<Void> deleteOne(@PathVariable("ref") String ref) {
+        log.info("Request delete order {}", ref);
+        orderService.deleteByRef(ref);
         return ResponseEntity.accepted().build();
     }
 
@@ -95,36 +89,6 @@ public class CustomerOrderController {
         log.info("Returning customer order with id: {}", byId.get());
         return ResponseEntity.ok(byId.get());
     }
-
-    @GetMapping("/reference/{reference}")
-    public ResponseEntity<CustomerOrder> getOneByReference(@PathVariable("reference") String reference) {
-        log.info("Request get customer order with reference {}", reference);
-        final CustomerOrder byReference = repository.findByReference(reference);
-        if (byReference == null) {
-            log.error("No order found with reference {}", reference);
-        } else {
-            log.info("Returning customer order with reference: {}", reference);
-        }
-
-        return ResponseEntity.ok(byReference);
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<List<CustomerOrder>> searchOrders(
-            @RequestParam(value = "intentId", required = false) String intentId,
-            @RequestParam(value = "reference", required = false) String reference,
-            @RequestParam(value = "customer", required = false) String customer,
-            @RequestParam(value = "supplier", required = false) String supplier,
-            @RequestParam(value = "date", required = false) LocalDate date,
-            @RequestParam(value = "dateFrom", required = false) LocalDate dateFrom,
-            @RequestParam(value = "dateTo", required = false) LocalDate dateTo
-    ) {
-        log.info("Request to search orders");
-        final List<CustomerOrder> result = orderService.search(intentId, reference, customer, supplier, date, dateFrom, dateTo);
-        log.info("Returning {} orders for search", result.size());
-        return ResponseEntity.ok(result);
-    }
-
 
     @PutMapping("/{orderId}")
     public ResponseEntity<CustomerOrder> updateOrder(@RequestBody CustomerOrder order, @PathVariable("orderId") String orderId) {
@@ -153,13 +117,4 @@ public class CustomerOrderController {
         return ResponseEntity.ok(customerOrder);
     }
 
-    private void sendOrderConfirmation(CustomerOrder order) {
-        String subject = "Your Zuvai order " + order.getReference();
-        Map<String, Object> body = new HashMap<>();
-        body.put("order", order);
-        body.put("customer", order.getCustomer());
-        body.put("items", order.getItems());
-        body.put("supplier", order.getSupplier());
-        emailService.sendMail(order.getCustomer().getEmail(), subject, "order", body);
-    }
 }

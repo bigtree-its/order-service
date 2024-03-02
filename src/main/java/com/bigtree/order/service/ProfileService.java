@@ -126,7 +126,7 @@ public class ProfileService {
         BigDecimal yearlyRevenue = BigDecimal.ZERO;
         if (!CollectionUtils.isEmpty(response.getToday())){
             for (CustomerOrder order : response.getToday()) {
-                if ( order.getStatus() == OrderStatus.PAID){
+                if ( order.getStatus() == OrderStatus.Paid){
                     today = today.add(order.getTotal().subtract(order.getServiceFee()));
                 }
             }
@@ -134,7 +134,7 @@ public class ProfileService {
 
         if (!CollectionUtils.isEmpty(response.getSevenDays())){
             for (CustomerOrder order : response.getSevenDays()) {
-                if ( order.getStatus() == OrderStatus.PAID){
+                if ( order.getStatus() == OrderStatus.Paid){
                     sevenDaysRevenue = sevenDaysRevenue.add(order.getTotal().subtract(order.getServiceFee()));
                 }
             }
@@ -142,14 +142,14 @@ public class ProfileService {
 
         if (!CollectionUtils.isEmpty(response.getMonth())){
             for (CustomerOrder order : response.getMonth()) {
-                if ( order.getStatus() == OrderStatus.PAID){
+                if ( order.getStatus() == OrderStatus.Paid){
                     monthlyRevenue = monthlyRevenue.add(order.getTotal().subtract(order.getServiceFee()));
                 }
             }
         }
         if (!CollectionUtils.isEmpty(response.getLastMonth())){
             for (CustomerOrder order : response.getLastMonth()) {
-                if ( order.getStatus() == OrderStatus.PAID){
+                if ( order.getStatus() == OrderStatus.Paid){
                     lastMonthRevenue = lastMonthRevenue.add(order.getTotal().subtract(order.getServiceFee()));
                 }
             }
@@ -157,14 +157,14 @@ public class ProfileService {
 
         if (!CollectionUtils.isEmpty(response.getSixMonth())){
             for (CustomerOrder order : response.getSixMonth()) {
-                if ( order.getStatus() == OrderStatus.PAID){
+                if ( order.getStatus() == OrderStatus.Paid){
                     sixMonthsRevenue = sixMonthsRevenue.add(order.getTotal().subtract(order.getServiceFee()));
                 }
             }
         }
         if (!CollectionUtils.isEmpty(response.getYear())){
             for (CustomerOrder order : response.getYear()) {
-                if ( order.getStatus() == OrderStatus.PAID){
+                if ( order.getStatus() == OrderStatus.Paid){
                     yearlyRevenue = yearlyRevenue.add(order.getTotal().subtract(order.getServiceFee()));
                 }
             }

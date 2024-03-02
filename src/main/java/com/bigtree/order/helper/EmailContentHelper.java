@@ -20,7 +20,7 @@ public class EmailContentHelper {
     SpringTemplateEngine springTemplateEngine;
 
     @Autowired
-    @Qualifier("htmlTemplateResolver")
+//    @Qualifier("htmlTemplateResolver")
     ITemplateResolver templateResolver;
 
     private boolean templateEngineInitialized;
