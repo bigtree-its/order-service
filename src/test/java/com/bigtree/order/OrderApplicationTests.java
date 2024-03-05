@@ -25,12 +25,6 @@ class OrderApplicationTests {
     void contextLoads() {
     }
 
-//    @Test
-    public void sendEmail() {
-        CustomerOrder order = DummyData.createDummyOrder();
-        emailService.sendOrderConfirmation(order);
-    }
-
     @Test
     public void testCreatePaymentIntent() {
         BigDecimal amount= new BigDecimal("15.50");
