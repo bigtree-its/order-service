@@ -1,7 +1,7 @@
 package com.bigtree.order.service;
 
 import com.bigtree.order.exception.ApiException;
-import com.bigtree.order.model.CustomerOrder;
+import com.bigtree.order.model.FoodOrder;
 import com.bigtree.order.model.OrderStatus;
 import com.bigtree.order.model.ProfileRequest;
 import com.bigtree.order.model.ProfileResponse;
@@ -67,14 +67,14 @@ public class ProfileService {
             query.addCriteria(Criteria.where("dateCreated").gte(request.getDateFrom()));
         }
         log.info("Searching orders with query {}", query);
-        List<CustomerOrder> orders = mongoTemplate.find(query, CustomerOrder.class);
+        List<FoodOrder> orders = mongoTemplate.find(query, FoodOrder.class);
         if (!CollectionUtils.isEmpty(orders)){
             response = buildProfile(orders);
         }
         return response;
     }
 
-    private ProfileResponse buildProfile(List<CustomerOrder> orders){
+    private ProfileResponse buildProfile(List<FoodOrder> orders){
         ProfileResponse response = ProfileResponse.builder().build();
         final LocalDate today = LocalDate.now();
         final LocalDate sevenDaysBefore = today.minusDays(7);
@@ -83,7 +83,7 @@ public class ProfileService {
         final LocalDate sixMonths = YearMonth.now().minusMonths(6).atDay(1);
         final LocalDate firstDayOfYear = Year.now().atMonth(1).atDay(1);
 
-        for (CustomerOrder order : orders) {
+        for (FoodOrder order : orders) {
             if ( order.getDateCreated().isEqual(today)){
                 response.getToday().add((order));
                 response.getSevenDays().add((order));
@@ -125,7 +125,7 @@ public class ProfileService {
         BigDecimal sixMonthsRevenue = BigDecimal.ZERO;
         BigDecimal yearlyRevenue = BigDecimal.ZERO;
         if (!CollectionUtils.isEmpty(response.getToday())){
-            for (CustomerOrder order : response.getToday()) {
+            for (FoodOrder order : response.getToday()) {
                 if ( order.getStatus() == OrderStatus.Paid){
                     today = today.add(order.getTotal().subtract(order.getServiceFee()));
                 }
@@ -133,7 +133,7 @@ public class ProfileService {
         }
 
         if (!CollectionUtils.isEmpty(response.getSevenDays())){
-            for (CustomerOrder order : response.getSevenDays()) {
+            for (FoodOrder order : response.getSevenDays()) {
                 if ( order.getStatus() == OrderStatus.Paid){
                     sevenDaysRevenue = sevenDaysRevenue.add(order.getTotal().subtract(order.getServiceFee()));
                 }
@@ -141,14 +141,14 @@ public class ProfileService {
         }
 
         if (!CollectionUtils.isEmpty(response.getMonth())){
-            for (CustomerOrder order : response.getMonth()) {
+            for (FoodOrder order : response.getMonth()) {
                 if ( order.getStatus() == OrderStatus.Paid){
                     monthlyRevenue = monthlyRevenue.add(order.getTotal().subtract(order.getServiceFee()));
                 }
             }
         }
         if (!CollectionUtils.isEmpty(response.getLastMonth())){
-            for (CustomerOrder order : response.getLastMonth()) {
+            for (FoodOrder order : response.getLastMonth()) {
                 if ( order.getStatus() == OrderStatus.Paid){
                     lastMonthRevenue = lastMonthRevenue.add(order.getTotal().subtract(order.getServiceFee()));
                 }
@@ -156,14 +156,14 @@ public class ProfileService {
         }
 
         if (!CollectionUtils.isEmpty(response.getSixMonth())){
-            for (CustomerOrder order : response.getSixMonth()) {
+            for (FoodOrder order : response.getSixMonth()) {
                 if ( order.getStatus() == OrderStatus.Paid){
                     sixMonthsRevenue = sixMonthsRevenue.add(order.getTotal().subtract(order.getServiceFee()));
                 }
             }
         }
         if (!CollectionUtils.isEmpty(response.getYear())){
-            for (CustomerOrder order : response.getYear()) {
+            for (FoodOrder order : response.getYear()) {
                 if ( order.getStatus() == OrderStatus.Paid){
                     yearlyRevenue = yearlyRevenue.add(order.getTotal().subtract(order.getServiceFee()));
                 }

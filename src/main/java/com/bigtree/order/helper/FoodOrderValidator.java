@@ -4,7 +4,7 @@ import com.bigtree.order.exception.ApiException;
 import com.bigtree.order.model.Customer;
 import com.bigtree.order.model.Item;
 import com.bigtree.order.model.Supplier;
-import com.bigtree.order.model.CustomerOrder;
+import com.bigtree.order.model.FoodOrder;
 import com.bigtree.order.model.ServiceMode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -16,9 +16,9 @@ import java.util.List;
 
 @Component
 @Slf4j
-public class OrderValidator {
+public class FoodOrderValidator {
 
-    public void validateOrder(CustomerOrder order){
+    public void validateOrder(FoodOrder order){
         if (CollectionUtils.isEmpty(order.getItems())){
             throw new ApiException(HttpStatus.BAD_REQUEST,"Items","Items cannot be empty");
         }

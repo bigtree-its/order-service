@@ -15,19 +15,19 @@ public class ProfileResponse {
 
 
     @Builder.Default
-    private List<CustomerOrder> today = new ArrayList<>();
+    private List<FoodOrder> today = new ArrayList<>();
     @Builder.Default
-    private List<CustomerOrder> sevenDays = new ArrayList<>();
+    private List<FoodOrder> sevenDays = new ArrayList<>();
     @Builder.Default
-    private List<CustomerOrder> month =new ArrayList<>();
+    private List<FoodOrder> month =new ArrayList<>();
     @Builder.Default
-    private List<CustomerOrder> lastMonth = new ArrayList<>();
+    private List<FoodOrder> lastMonth = new ArrayList<>();
     @Builder.Default
-    private List<CustomerOrder> sixMonth = new ArrayList<>();
+    private List<FoodOrder> sixMonth = new ArrayList<>();
     @Builder.Default
-    private List<CustomerOrder> year = new ArrayList<>();
+    private List<FoodOrder> year = new ArrayList<>();
     @Builder.Default
-    private List<CustomerOrder> dateRange = new ArrayList<>();
+    private List<FoodOrder> dateRange = new ArrayList<>();
     private LocalDate dateFrom;
     private LocalDate dateTp;
     private BigDecimal todayRevenue;

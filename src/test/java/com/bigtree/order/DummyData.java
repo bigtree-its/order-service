@@ -10,12 +10,12 @@ import java.util.List;
 
 public class DummyData {
 
-    public static CustomerOrder createDummyOrder() {
+    public static FoodOrder createDummyOrder() {
         Item i = createDummyItem();
         List<Item> items = new ArrayList<>();
         items.add(i);
-        CustomerOrder order = CustomerOrder.builder()
-                .status(OrderStatus.CREATED)
+        FoodOrder order = FoodOrder.builder()
+                .status(OrderStatus.Created)
                 .serviceFee(BigDecimal.ONE)
                 .subTotal(BigDecimal.ONE)
                 .total(BigDecimal.ONE)
@@ -27,7 +27,7 @@ public class DummyData {
                 .items(items)
                 .createdAt(LocalDateTime.now())
                 .expectedDeliveryDate(LocalDate.now())
-                .collectBy(LocalDate.now())
+                .collectionDate(LocalDate.now())
                 .build();
         return order;
     }

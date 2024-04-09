@@ -69,7 +69,7 @@ public class StripeService {
         return result;
     }
 
-    public Payment createPaymentIntent(PaymentIntentRequest request) {
+    public PaymentIntent createPaymentIntent(PaymentIntentRequest request) {
         Stripe.apiKey = stripeKey;
 
         Payment payment = paymentRepository.findFirstByOrderReference(request.getOrderReference());
@@ -83,15 +83,15 @@ public class StripeService {
                     throw  new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Order is fully Paid. Cannot update further");
                 }else{
                     updatePaymentIntent(request, paymentIntent);
+                    return paymentIntent;
                 }
             }
         }else{
-            payment =  createStripePaymentIntent(request);
+            return createStripePaymentIntent(request);
         }
-        return payment;
     }
 
-    private Payment createStripePaymentIntent(PaymentIntentRequest request) {
+    private PaymentIntent createStripePaymentIntent(PaymentIntentRequest request) {
         final BigDecimal stripeAmount = request.getAmount().multiply(hundred);
         PaymentIntentCreateParams params =
                 PaymentIntentCreateParams.builder()
@@ -103,14 +103,13 @@ public class StripeService {
                         .build();
         try {
             PaymentIntent created = PaymentIntent.create(params);
+            saveNewLocalPaymentIntent(request, created);
             log.info("Created new payment intent in Stripe " + created.getId());
-            return saveNewLocalPaymentIntent(request, created);
+            return created;
         } catch (StripeException e) {
             log.error("Unable to create payment intent {}", e.getMessage());
-            return Payment.builder()
-                    .errorMessage(e.getMessage())
-                    .build();
         }
+        throw  new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", "Unable to create payment intent. Please contact customer support "+ request.getOrderReference());
     }
 
     public void updatePaymentIntent(PaymentIntentRequest request, PaymentIntent paymentIntent) {

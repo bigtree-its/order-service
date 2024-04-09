@@ -3,6 +3,7 @@ package com.bigtree.order.controller;
 import com.bigtree.order.model.Payment;
 import com.bigtree.order.model.PaymentIntentRequest;
 import com.bigtree.order.service.StripeService;
+import com.stripe.model.PaymentIntent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/stripe-payments")
+@RequestMapping("/orders/v1/foods/stripe-payments")
 @CrossOrigin(origins = "*")
 public class StripeController {
 
@@ -22,9 +23,9 @@ public class StripeController {
     StripeService stripeService;
 
     @PostMapping("/payment-intent")
-    public ResponseEntity<Payment> createPaymentIntent(@RequestBody PaymentIntentRequest request) {
+    public ResponseEntity<PaymentIntent> createPaymentIntent(@RequestBody PaymentIntentRequest request) {
         log.info("Request: createPaymentIntent: Amount:{}, Order:{}, Customer: {}", request.getAmount(), request.getOrderReference(), request.getCustomerEmail());
-        Payment response = stripeService.createPaymentIntent(request);
+        PaymentIntent response = stripeService.createPaymentIntent(request);
         return ResponseEntity.ok(response);
     }
 

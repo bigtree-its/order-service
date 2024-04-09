@@ -3,7 +3,7 @@ package com.bigtree.order.service;
 import com.bigtree.order.exception.ApiException;
 import com.bigtree.order.model.*;
 import com.bigtree.order.repository.PaymentRepository;
-import com.bigtree.order.repository.CustomerOrderRepository;
+import com.bigtree.order.repository.FoodOrderRepository;
 import com.stripe.model.PaymentIntent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -24,13 +24,13 @@ import java.util.Map;
 
 @Service
 @Slf4j
-public class OrderService {
+public class FoodOrderService {
 
     @Autowired
     MongoTemplate mongoTemplate;
 
     @Autowired
-    CustomerOrderRepository customerOrderRepository;
+    FoodOrderRepository customerOrderRepository;
 
     @Autowired
     PaymentRepository paymentRepository;
@@ -41,36 +41,39 @@ public class OrderService {
     @Autowired
     EmailService emailService;
 
-    public CustomerOrder createOrder(CustomerOrder order, String action) {
-        CustomerOrder response = null;
+    public FoodOrder createOrder(FoodOrder order, String action) {
+        FoodOrder foodOrder = null;
         if (StringUtils.isEmpty(order.getReference())) {
-            String salt = RandomStringUtils.random(6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
-            order.setReference(salt);
+            String salt1 = RandomStringUtils.random(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
+            String salt2 = RandomStringUtils.random(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
+            String salt3 = RandomStringUtils.random(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
+            order.setReference(salt1+"-"+salt2+"-"+salt3);
             order.setStatus(OrderStatus.Draft);
             order.setDateCreated(LocalDate.now());
             order.setCreatedAt(LocalDateTime.now());
-            response = customerOrderRepository.save(order);
-            log.info("Saved new order: {}, Ref: {}", response.get_id(), response.getReference());
+            foodOrder = customerOrderRepository.save(order);
+            log.info("Saved new order: {}, Ref: {}", foodOrder.get_id(), foodOrder.getReference());
             if (StringUtils.isNotEmpty(action)) {
-                action(response.getReference(), action);
-            } else {
-                final Map<String, Object> params = buildEmailParams(response);
-                final Email email = buildEmail(response, params);
-                emailService.sendMail(email);
+                foodOrder= action(foodOrder.getReference(), action);
             }
+//            else {
+//                final Map<String, Object> params = buildEmailParams(response);
+//                final Email email = buildEmail(response, params);
+//                emailService.sendMail(email);
+//            }
         } else {
-            CustomerOrder loaded = customerOrderRepository.findByReference(order.getReference());
+            FoodOrder loaded = customerOrderRepository.findByReference(order.getReference());
             if (loaded != null) {
                 log.info("Order {} already exist. Updating", loaded.getReference());
-                response = updateOrder(order, loaded, action);
+                foodOrder = updateOrder(order, loaded, action);
             } else {
                 log.error("Unable to update order with reference {}. Order not found", order.getReference());
             }
         }
-        return response;
+        return foodOrder;
     }
 
-    private CustomerOrder updateOrder(CustomerOrder order, CustomerOrder loaded, String action) {
+    private FoodOrder updateOrder(FoodOrder order, FoodOrder loaded, String action) {
         loaded.setUpdatedAt(LocalDateTime.now());
         loaded.setItems(order.getItems());
         loaded.setCustomer(order.getCustomer());
@@ -82,7 +85,7 @@ public class OrderService {
         loaded.setNotes(order.getNotes());
         loaded.setServiceMode(order.getServiceMode());
         loaded.setTotal(order.getTotal());
-        CustomerOrder updated = customerOrderRepository.save(loaded);
+        FoodOrder updated = customerOrderRepository.save(loaded);
         log.info("Updated order: {}", updated.getReference());
         if (StringUtils.isNotEmpty(action)) {
             action(updated.getReference(), action);
@@ -90,15 +93,15 @@ public class OrderService {
         return updated;
     }
 
-      public List<CustomerOrder> search(String intentId, String reference, String customer, String supplier,
-                                      LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
-        List<CustomerOrder> result = new ArrayList<>();
+      public List<FoodOrder> search(String intentId, String reference, String customer, String supplier,
+                                    LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
+        List<FoodOrder> result = new ArrayList<>();
         Query query = new Query();
         if (StringUtils.isNotEmpty(intentId)) {
             log.info("Searching order with payment intent {}", intentId);
             Payment intent = paymentRepository.findFirstByIntentId(intentId);
             if (intent != null) {
-                CustomerOrder order = customerOrderRepository.findByReference(intent.getOrderReference());
+                FoodOrder order = customerOrderRepository.findByReference(intent.getOrderReference());
                 if (order != null) {
                     log.info("Found an order with reference {}", intent.getOrderReference());
                 }
@@ -108,7 +111,7 @@ public class OrderService {
         }
 
         if (StringUtils.isNotEmpty(reference)) {
-            CustomerOrder order = customerOrderRepository.findByReference(reference);
+            FoodOrder order = customerOrderRepository.findByReference(reference);
             result.add(order);
             return result;
         }
@@ -131,16 +134,16 @@ public class OrderService {
         }
 
         log.info("Searching orders with query {}", query.toString());
-        result = mongoTemplate.find(query, CustomerOrder.class);
+        result = mongoTemplate.find(query, FoodOrder.class);
         return result;
     }
 
 
-    private CustomerOrder findByReference(String reference) {
+    private FoodOrder findByReference(String reference) {
         return customerOrderRepository.findByReference(reference);
     }
 
-    private CustomerOrder findByPaymentIntentId(String paymentIntentId) {
+    private FoodOrder findByPaymentIntentId(String paymentIntentId) {
         Payment paymentIntent = paymentRepository.findFirstByIntentId(paymentIntentId);
         if (paymentIntent != null) {
             return findByReference(paymentIntent.getOrderReference());
@@ -150,11 +153,11 @@ public class OrderService {
     }
 
 
-    public CustomerOrder update(OrderUpdateRequest request) {
+    public FoodOrder update(OrderUpdateRequest request) {
         if (StringUtils.isEmpty(request.getReference()) && StringUtils.isEmpty(request.getPaymentIntentId())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Either order reference or payment intent id is mandatory");
         }
-        CustomerOrder order = null;
+        FoodOrder order = null;
         if (StringUtils.isNotEmpty(request.getReference())) {
             order = findByReference(request.getReference());
         }
@@ -180,36 +183,59 @@ public class OrderService {
         if (request.getExpectedDeliveryDate() != null) {
             order.setExpectedDeliveryDate(request.getExpectedDeliveryDate());
         }
-        log.info("Order updated {}", order.getReference());
+        if ( StringUtils.isNotEmpty(request.getPaymentStatus())){
+            if ( request.getPaymentStatus().equalsIgnoreCase("succeeded")){
+                payment(order);
+            }
+        }
+        log.info("Order updated {}. Status {}", order.getReference(), order.getStatus());
         return customerOrderRepository.save(order);
     }
 
-    public CustomerOrder action(String reference, String action) {
+    public FoodOrder action(String reference, String action) {
         if (StringUtils.isEmpty(reference) || StringUtils.isEmpty(action)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Order Reference and action are mandatory");
         }
-        CustomerOrder byReference = customerOrderRepository.findByReference(reference);
-        if (byReference == null) {
+        FoodOrder foodOrder = customerOrderRepository.findByReference(reference);
+        if (foodOrder == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Order not found");
         }
         switch (action) {
-            case "Accept" -> acceptOrder(byReference);
-            case "Submit" -> submitOrder(byReference);
-            case "Cancel" -> cancelOrder(byReference);
-            case "Reject" -> rejectOrder(byReference);
-            case "Pay" -> payment(byReference);
-            case "Refund" -> refundOrder(byReference);
-            case "Delete" -> deleteOrder(byReference);
+            case "Accept" -> acceptOrder(foodOrder);
+            case "Submit" -> submitOrder(foodOrder);
+            case "Cancel" -> cancelOrder(foodOrder);
+            case "Reject" -> rejectOrder(foodOrder);
+            case "Pay" -> payment(foodOrder);
+            case "IntentToPay" -> {
+                foodOrder = paymentIntent(foodOrder);
+            }
+            case "Refund" -> refundOrder(foodOrder);
+            case "Delete" -> deleteOrder(foodOrder);
             default -> throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Action not supported");
         }
-        if (!StringUtils.equalsIgnoreCase("Delete", action)) {
-            customerOrderRepository.save(byReference);
-            log.info("Order {} status {}", reference, byReference.getStatus().name());
-        }
-        return byReference;
+
+        return foodOrder;
     }
 
-    private void refundOrder(CustomerOrder order) {
+    public FoodOrder paymentIntent(FoodOrder order) {
+        PaymentIntentRequest req = PaymentIntentRequest.builder()
+                .amount(order.getTotal())
+                .orderReference(order.getReference())
+                .currency("GBP")
+                .customerEmail(order.getCustomer().getEmail())
+                .supplierId(order.getSupplier().get_id())
+                .build();
+        final PaymentIntent paymentIntent = stripeService.createPaymentIntent(req);
+        if ( paymentIntent != null){
+            log.info("Created payment intent {} with secret {} for order {}", paymentIntent.getId(), paymentIntent.getClientSecret(), order.getReference());
+            order.setPaymentIntentId(paymentIntent.getId());
+            order.setClientSecret(paymentIntent.getClientSecret());
+            return customerOrderRepository.save(order);
+        }
+        return order;
+    }
+
+    private void refundOrder(FoodOrder order) {
         if (order.getStatus() == OrderStatus.Paid) {
             order.setStatus(OrderStatus.Cancelled);
             order.setDateRefunded(LocalDateTime.now());
@@ -221,7 +247,7 @@ public class OrderService {
         }
     }
 
-    private void payment(CustomerOrder order) {
+    private void payment(FoodOrder order) {
         Payment localIntent = paymentRepository.findFirstByOrderReference(order.getReference());
         if (localIntent != null) {
             final PaymentIntent paymentIntent = stripeService.retrieveStripePaymentIntent(localIntent.getIntentId());
@@ -237,7 +263,7 @@ public class OrderService {
         }
     }
 
-    private void cancelOrder(CustomerOrder order) {
+    private void cancelOrder(FoodOrder order) {
         if (order.getStatus() == OrderStatus.Pending) {
             order.setStatus(OrderStatus.Cancelled);
             order.setDateCancelled(LocalDateTime.now());
@@ -249,7 +275,7 @@ public class OrderService {
         }
     }
 
-    private void rejectOrder(CustomerOrder order) {
+    private void rejectOrder(FoodOrder order) {
         if (order.getStatus() == OrderStatus.Pending) {
             order.setStatus(OrderStatus.Rejected);
             order.setDateRejected(LocalDateTime.now());
@@ -261,7 +287,7 @@ public class OrderService {
         }
     }
 
-    private void submitOrder(CustomerOrder order) {
+    private void submitOrder(FoodOrder order) {
         if (order.getStatus() == OrderStatus.Draft) {
             order.setStatus(OrderStatus.Pending);
             order.setDateSubmitted(LocalDateTime.now());
@@ -273,12 +299,12 @@ public class OrderService {
         }
     }
 
-    private void acceptOrder(CustomerOrder order) {
+    private void acceptOrder(FoodOrder order) {
         if (order.getStatus() == OrderStatus.Pending) {
             order.setStatus(OrderStatus.Accepted);
             order.setDateAccepted(LocalDateTime.now());
             log.info("Order {} is accepted by Chef {}", order.getReference(), order.getSupplier().get_id());
-            Payment paymentIntent = stripeService.createPaymentIntent(PaymentIntentRequest.builder()
+            PaymentIntent paymentIntent = stripeService.createPaymentIntent(PaymentIntentRequest.builder()
                     .orderReference(order.getReference())
                     .amount(order.getTotal())
                     .currency(order.getCurrency())
@@ -286,7 +312,7 @@ public class OrderService {
                     .supplierId(order.getSupplier().get_id())
                     .build());
             final Map<String, Object> params = buildEmailParams(order);
-            params.put("linkUrl", "http://localhost:4200/make_payment?ref=" + order.getReference() + "&intent=" + paymentIntent.getIntentId());
+            params.put("linkUrl", "http://localhost:4200/make_payment?ref=" + order.getReference() + "&intent=" + paymentIntent.getId());
             params.put("linkText", "Make Payment");
             final Email email = buildEmail(order, params);
             emailService.sendMail(email);
@@ -295,7 +321,7 @@ public class OrderService {
         }
     }
 
-    private Email buildEmail(CustomerOrder order, Map<String, Object> params) {
+    private Email buildEmail(FoodOrder order, Map<String, Object> params) {
         final Email email = Email.builder()
                 .to(order.getCustomer().getEmail())
                 .subject(order.getStatus() + ": Your Zuvai order " + order.getReference())
@@ -304,7 +330,7 @@ public class OrderService {
         return email;
     }
 
-    private Map<String, Object> buildEmailParams(CustomerOrder order) {
+    private Map<String, Object> buildEmailParams(FoodOrder order) {
         Map<String, Object> params = new HashMap<>();
         params.put("message", emailMessage(order));
         params.put("order", order);
@@ -316,7 +342,7 @@ public class OrderService {
         return params;
     }
 
-    private String emailMessage(CustomerOrder order) {
+    private String emailMessage(FoodOrder order) {
         String message = "";
         switch (order.getStatus()) {
             case Draft -> {
@@ -358,7 +384,7 @@ public class OrderService {
         return message;
     }
 
-    private void deleteOrder(CustomerOrder order) {
+    private void deleteOrder(FoodOrder order) {
         if (order.getStatus() == OrderStatus.Draft || order.getStatus() == OrderStatus.Cancelled) {
             customerOrderRepository.delete(order);
             log.info("Order {} has been deleted", order.getReference());
@@ -368,7 +394,7 @@ public class OrderService {
     }
 
     public void deleteByRef(String ref) {
-        final CustomerOrder byReference = customerOrderRepository.findByReference(ref);
+        final FoodOrder byReference = customerOrderRepository.findByReference(ref);
         if (byReference != null) {
             deleteOrder(byReference);
         }

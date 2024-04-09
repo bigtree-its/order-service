@@ -1,5 +1,6 @@
 package com.bigtree.order.model;
 
+import com.stripe.model.PaymentIntent;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -13,11 +14,13 @@ import java.util.List;
 
 @Data
 @Builder
-@Document(collection = "customer-orders")
-public class CustomerOrder{
+@Document(collection = "food-orders")
+public class FoodOrder {
 
     @Id
     private String _id;
+    private String paymentIntentId;
+    private String clientSecret;
     private String reference;
     private String notes;
     private String customerComment;

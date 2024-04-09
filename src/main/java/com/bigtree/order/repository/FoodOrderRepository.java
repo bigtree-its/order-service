@@ -1,6 +1,6 @@
 package com.bigtree.order.repository;
 
-import com.bigtree.order.model.CustomerOrder;
+import com.bigtree.order.model.FoodOrder;
 import com.bigtree.order.model.OrderStatus;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
@@ -20,9 +20,9 @@ import java.util.UUID;
  *
  * @author Nav
  */
-public interface CustomerOrderRepository extends MongoRepository<CustomerOrder, String> {
+public interface FoodOrderRepository extends MongoRepository<FoodOrder, String> {
 
-    CustomerOrder findByReference(String reference);
+    FoodOrder findByReference(String reference);
 
     /**
      * Retrieve count of <code>Order</code> from the data store for given date
@@ -33,8 +33,8 @@ public interface CustomerOrderRepository extends MongoRepository<CustomerOrder, 
     Long countByDateCreated(LocalDateTime dateCreated);
 
     @Transactional(readOnly = true)
-    @Query("SELECT o FROM CustomerOrder o WHERE o.supplier.id = ?1")
-    List<CustomerOrder> findBySupplierId(UUID supplierId);
+    @Query("SELECT o FROM FoodOrder o WHERE o.supplier.id = ?1")
+    List<FoodOrder> findBySupplierId(UUID supplierId);
 
     /**
      * Retrieve all <code>Order</code>s from the data store for given customer's email
@@ -42,12 +42,12 @@ public interface CustomerOrderRepository extends MongoRepository<CustomerOrder, 
      * @return a <code>Collection</code> of <code>Order</code>s
      */
     @Transactional(readOnly = true)
-    @Query("SELECT o FROM CustomerOrder o WHERE o.customer.email = ?1")
-    List<CustomerOrder> findByCustomerEmail(String customerEmail);
+    @Query("SELECT o FROM FoodOrder o WHERE o.customer.email = ?1")
+    List<FoodOrder> findByCustomerEmail(String customerEmail);
 
     @Transactional(readOnly = true)
-    @Query("SELECT o FROM CustomerOrder o WHERE o.customer.mobile = ?1")
-    List<CustomerOrder> findByCustomerMobile(String customerMobile);
+    @Query("SELECT o FROM FoodOrder o WHERE o.customer.mobile = ?1")
+    List<FoodOrder> findByCustomerMobile(String customerMobile);
 
     /**
      * Retrieve all <code>Order</code>s from the data store for given status
@@ -55,8 +55,8 @@ public interface CustomerOrderRepository extends MongoRepository<CustomerOrder, 
      * @return a <code>Collection</code> of <code>Order</code>s
      */
     @Transactional(readOnly = true)
-    @Query("SELECT o FROM CustomerOrder o WHERE o.status = ?1")
-    Collection<CustomerOrder> findByStatus(OrderStatus status);
+    @Query("SELECT o FROM FoodOrder o WHERE o.status = ?1")
+    Collection<FoodOrder> findByStatus(OrderStatus status);
 
 
 
