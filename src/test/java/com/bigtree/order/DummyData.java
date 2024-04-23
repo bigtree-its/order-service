@@ -32,8 +32,8 @@ public class DummyData {
         return order;
     }
 
-    public static Supplier createDummySupplier() {
-        return Supplier.builder()
+    public static FoodSupplier createDummySupplier() {
+        return FoodSupplier.builder()
                 .name("name")
                 .mobile("mobile")
                 .email("email")

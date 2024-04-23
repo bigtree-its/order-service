@@ -5,10 +5,11 @@ import lombok.Data;
 
 @Data
 @Builder
-public class Supplier {
+public class FoodSupplier {
 
     private String _id;
     private String name;
+    private String tradingName;
     private String image;
     private String mobile;
     private String email;

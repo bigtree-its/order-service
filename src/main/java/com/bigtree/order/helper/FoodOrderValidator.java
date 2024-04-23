@@ -1,11 +1,8 @@
 package com.bigtree.order.helper;
 
 import com.bigtree.order.exception.ApiException;
-import com.bigtree.order.model.Customer;
-import com.bigtree.order.model.Item;
-import com.bigtree.order.model.Supplier;
-import com.bigtree.order.model.FoodOrder;
-import com.bigtree.order.model.ServiceMode;
+import com.bigtree.order.model.*;
+import com.bigtree.order.model.FoodSupplier;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
@@ -27,24 +24,24 @@ public class FoodOrderValidator {
         validateCustomer(order.getCustomer(), order.getServiceMode() == ServiceMode.DELIVERY);
     }
 
-    private void validateSupplier(Supplier supplier){
-        if ( supplier == null ){
+    private void validateSupplier(FoodSupplier foodSupplier){
+        if ( foodSupplier == null ){
             throw new ApiException(HttpStatus.BAD_REQUEST,"Supplier", "Supplier cannot be empty");
         }
-        if ( supplier.get_id() == null ){
+        if ( foodSupplier.get_id() == null ){
             throw new ApiException(HttpStatus.BAD_REQUEST,"Supplier", "SupplierId cannot be empty");
         }
-        if (StringUtils.isEmpty(supplier.getEmail()) ){
+        if (StringUtils.isEmpty(foodSupplier.getEmail()) ){
             throw new ApiException(HttpStatus.BAD_REQUEST,"Supplier", "Supplier email cannot be empty");
         }
-        if (StringUtils.isEmpty(supplier.getMobile()) ){
+        if (StringUtils.isEmpty(foodSupplier.getMobile()) ){
             throw new ApiException(HttpStatus.BAD_REQUEST,"Supplier", "Supplier Mobile cannot be empty");
         }
-        if (supplier.getAddress() == null
-                || StringUtils.isEmpty(supplier.getAddress().getAddressLine1())
-                || StringUtils.isEmpty(supplier.getAddress().getAddressLine2())
-                || StringUtils.isEmpty(supplier.getAddress().getCity())
-                || StringUtils.isEmpty(supplier.getAddress().getCountry())
+        if (foodSupplier.getAddress() == null
+                || StringUtils.isEmpty(foodSupplier.getAddress().getAddressLine1())
+                || StringUtils.isEmpty(foodSupplier.getAddress().getAddressLine2())
+                || StringUtils.isEmpty(foodSupplier.getAddress().getCity())
+                || StringUtils.isEmpty(foodSupplier.getAddress().getCountry())
         ){
             throw new ApiException(HttpStatus.BAD_REQUEST,"Supplier", "Supplier Address cannot be empty");
         }

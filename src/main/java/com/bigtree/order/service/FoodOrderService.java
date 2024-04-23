@@ -183,6 +183,9 @@ public class FoodOrderService {
         if (request.getExpectedDeliveryDate() != null) {
             order.setExpectedDeliveryDate(request.getExpectedDeliveryDate());
         }
+        if (request.getStatus() != null) {
+            order.setStatus(OrderStatus.valueOf(request.getStatus()));
+        }
         if ( StringUtils.isNotEmpty(request.getPaymentStatus())){
             if ( request.getPaymentStatus().equalsIgnoreCase("succeeded")){
                 payment(order);
@@ -205,6 +208,12 @@ public class FoodOrderService {
             case "Submit" -> submitOrder(foodOrder);
             case "Cancel" -> cancelOrder(foodOrder);
             case "Reject" -> rejectOrder(foodOrder);
+            case "Ready" -> {
+                foodOrder.setStatus(OrderStatus.Ready);
+            }
+            case "OutForDelivery" -> {
+                foodOrder.setStatus(OrderStatus.OutForDelivery);
+            }
             case "Pay" -> payment(foodOrder);
             case "IntentToPay" -> {
                 foodOrder = paymentIntent(foodOrder);
@@ -324,7 +333,7 @@ public class FoodOrderService {
     private Email buildEmail(FoodOrder order, Map<String, Object> params) {
         final Email email = Email.builder()
                 .to(order.getCustomer().getEmail())
-                .subject(order.getStatus() + ": Your Zuvai order " + order.getReference())
+                .subject(order.getStatus() + ": Your Desify order " + order.getReference())
                 .params(params)
                 .build();
         return email;
@@ -353,8 +362,22 @@ public class FoodOrderService {
             case Paid -> {
                 message = "Your order has been Paid. We will notify you once your order prepared by Chef.";
             }
-            case In_Progress -> {
+            case InProgress -> {
                 message = "Your order is in progress";
+            }
+            case Ready -> {
+                if ( order.getServiceMode() == ServiceMode.COLLECTION){
+                    message = "Your order is Ready for collection";
+                }else{
+                    message = "Your order is Ready for Delivery";
+                }
+            }
+            case OutForDelivery -> {
+                if ( order.getServiceMode() == ServiceMode.COLLECTION){
+                    message = "Your order is Ready for collection";
+                }else{
+                    message = "Your order is Ready for Out for Delivery";
+                }
             }
             case Pending -> {
                 message = "Your order has been submitted to Chef and waiting to be accepted.";

@@ -1,6 +1,5 @@
 package com.bigtree.order.model;
 
-import com.stripe.model.PaymentIntent;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -29,7 +28,7 @@ public class FoodOrder {
     private OrderStatus status;
     private ServiceMode serviceMode;
     private Customer customer;
-    private Supplier supplier;
+    private FoodSupplier supplier;
     private List<Item> items;
     private BigDecimal subTotal;
     private BigDecimal total;

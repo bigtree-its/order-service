@@ -17,6 +17,8 @@ public class OrderTracking {
     private String orderId;
     private String reference;
     private OrderStatus status;
+    private LocalDateTime dateReady;
+    private LocalDateTime dateOutForDelivery;
     private LocalDateTime dateAccepted;
     private LocalDateTime datePaid;
     private LocalDateTime dateCancelled;
