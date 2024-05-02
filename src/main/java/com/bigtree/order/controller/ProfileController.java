@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping("/orders/v1/foods/profiles")
-@CrossOrigin(origins = "*")
+@CrossOrigin
 public class ProfileController {
 
     @Autowired

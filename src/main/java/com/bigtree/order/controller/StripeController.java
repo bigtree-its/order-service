@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping("/orders/v1/foods/stripe-payments")
-@CrossOrigin(origins = "*")
+@CrossOrigin
 public class StripeController {
 
 

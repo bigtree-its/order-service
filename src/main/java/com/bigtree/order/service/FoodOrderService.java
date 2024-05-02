@@ -52,7 +52,7 @@ public class FoodOrderService {
             order.setDateCreated(LocalDate.now());
             order.setCreatedAt(LocalDateTime.now());
             foodOrder = customerOrderRepository.save(order);
-            log.info("Saved new order: {}, Ref: {}", foodOrder.get_id(), foodOrder.getReference());
+            log.info("Created new order: {}, Ref: {}", foodOrder.get_id(), foodOrder.getReference());
             if (StringUtils.isNotEmpty(action)) {
                 foodOrder= action(foodOrder.getReference(), action);
             }
@@ -333,7 +333,7 @@ public class FoodOrderService {
     private Email buildEmail(FoodOrder order, Map<String, Object> params) {
         final Email email = Email.builder()
                 .to(order.getCustomer().getEmail())
-                .subject(order.getStatus() + ": Your Desify order " + order.getReference())
+                .subject(order.getStatus() + ": Your DESILAND order " + order.getReference())
                 .params(params)
                 .build();
         return email;
