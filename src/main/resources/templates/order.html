@@ -8,8 +8,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
     <style type="text/css">
+        @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap");
         body,
         table,
         td,
@@ -55,13 +55,10 @@
         .banner {
             height: 50px;
             line-height: 50px;
-            padding: 10px 0;
-            width: 600px;
-            margin: auto;
-            font-family: "Bebas Neue", sans-serif;
             font-size: 30px;
-            color: #FF3333;
+            color: #deff08;
             font-weight: 900;
+            font-family: "Bebas Neue", sans-serif;
         }
         .order-header{
             padding: 10px 0;
@@ -157,7 +154,7 @@
             <span>DESILAND</span>
         </div>
         <div class="order-header">
-            <span>Your Order #<span th:utext="${order.reference}"></span> is <span th:utext="${status}"></span></span>
+            <span>Your Order #<span th:utext="${order.reference}"></span>
         </div>
 
         <div align="center" class="order-details">
@@ -167,7 +164,7 @@
         </div>
         <div style="border-bottom: 1px solid #e2e2e2;padding:5px 0;margin-bottom:5px;">
             <div>
-                <span style="font-weight: 600;font-size: 20px;padding:10px 0;" th:utext="${supplier.name}"></span>
+                <span style="font-weight: 600;font-size: 20px;padding:10px 0;" th:utext="${supplier.tradingName}"></span>
             </div>
             <div>
                 <span th:utext="${supplier.address.addressLine1}" th:if="${supplier.address.addressLine1} != null"></span>,
@@ -274,7 +271,7 @@
                 </tr>
             </table>
         </div>
-        <div style="background: #dbf3fa;padding:5px 10px;margin:5px 0;border-radius:5px" th:if="${serviceMode == 'DELIVERY'}">
+        <div style="background: #f9f9f9;padding:5px 10px;margin:10px 0;border-radius:5px" th:if="${serviceMode == 'DELIVERY'}">
             <p style="font-weight: 800; ">Delivery Address</p>
             <p>
             <div th:if="${customer.address.addressLine1} != null">
@@ -304,7 +301,7 @@
             <span style="font-weight: 800;margin-right: 10px; display: block;" >Collection Date </span>: <span
                 th:utext="${#temporals.format(order.collectionDate, 'dd MMM yyyy')}"></span>
         </div>
-        <div style="background: #dbf3fa;padding:5px 10px;margin:5px 0;border-radius:6px" th:if="${serviceMode == 'COLLECTION'}">
+        <div style="background: #f9f9f;padding:5px 10px;margin:10px 0;border-radius:6px" th:if="${serviceMode == 'COLLECTION'}">
             <p style="font-weight: 800; ">Collect At</p>
             <p>
             <div th:if="${supplier.address.addressLine1} != null">
@@ -343,16 +340,12 @@
 
         <div style="padding:5p 0x;margin:5px 0;">
             <span>We hope to welcome you back to www.desiland.co.uk soon!</span>
-            <p>
-                Best Regards,
-            </p>
-            <p style="font-style: italic;">
-                The DESILAND Team
-            </p>
+            <span>Best Regards,</span>
+            <span>The Desiland Team</span>
         </div>
-        <div style="padding:5p 0x;margin:5px 0;">
+        <div style="padding:10px;margin:5px 0;background-color: #f3f3f3;">
             <p>
-                ©2024-2024 DESILAND Ltd. Registered in Scotland. #SC595168. VAT No #295285756
+                ©2024-2024 Desiland Ltd. Registered in Scotland. #SC595168. VAT No #295285756
             </p>
         </div>
     </div>

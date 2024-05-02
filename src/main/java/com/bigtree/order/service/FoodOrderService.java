@@ -338,7 +338,7 @@ public class FoodOrderService {
     private Email buildEmail(FoodOrder order, Map<String, Object> params) {
         final Email email = Email.builder()
                 .to(order.getCustomer().getEmail())
-                .subject(order.getStatus() + ": Your DESILAND order " + order.getReference())
+                .subject("Your DESILAND order " + order.getReference())
                 .params(params)
                 .build();
         return email;
@@ -365,7 +365,11 @@ public class FoodOrderService {
             case Created -> {
             }
             case Paid -> {
-                message = "Your order has been Paid. We will notify you once your order prepared by Chef.";
+                if (order.getServiceMode() == ServiceMode.COLLECTION) {
+                    message = "Your order has been Paid. Will notify you once it is Ready for collection";
+                } else {
+                    message = "Your order has been Paid. Will notify you once it is Ready for delivery";
+                }
             }
             case InProgress -> {
                 message = "Your order is in progress";
@@ -381,7 +385,7 @@ public class FoodOrderService {
                 if (order.getServiceMode() == ServiceMode.COLLECTION) {
                     message = "Your order is Ready for collection";
                 } else {
-                    message = "Your order is Ready for Out for Delivery";
+                    message = "Your order is Out for Delivery";
                 }
             }
             case Pending -> {

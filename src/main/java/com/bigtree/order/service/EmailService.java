@@ -38,6 +38,8 @@ public class EmailService {
             log.info("Email sent to customer {}", email.getTo());
         } catch (MessagingException e) {
             log.info("Exception while sending payment link email to {}", email.getTo());
+        } catch (Exception e){
+            log.error("Error while sending email to {}", email.getTo());
         }
     }
 }
