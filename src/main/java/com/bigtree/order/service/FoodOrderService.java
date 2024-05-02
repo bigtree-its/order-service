@@ -47,14 +47,14 @@ public class FoodOrderService {
             String salt1 = RandomStringUtils.random(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
             String salt2 = RandomStringUtils.random(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
             String salt3 = RandomStringUtils.random(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
-            order.setReference(salt1+"-"+salt2+"-"+salt3);
+            order.setReference(salt1 + "-" + salt2 + "-" + salt3);
             order.setStatus(OrderStatus.Draft);
             order.setDateCreated(LocalDate.now());
             order.setCreatedAt(LocalDateTime.now());
             foodOrder = customerOrderRepository.save(order);
             log.info("Created new order: {}, Ref: {}", foodOrder.get_id(), foodOrder.getReference());
             if (StringUtils.isNotEmpty(action)) {
-                foodOrder= action(foodOrder.getReference(), action);
+                foodOrder = action(foodOrder.getReference(), action);
             }
 //            else {
 //                final Map<String, Object> params = buildEmailParams(response);
@@ -93,8 +93,8 @@ public class FoodOrderService {
         return updated;
     }
 
-      public List<FoodOrder> search(String intentId, String reference, String customer, String supplier,
-                                    LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
+    public List<FoodOrder> search(String intentId, String reference, String customer, String supplier,
+                                  LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
         List<FoodOrder> result = new ArrayList<>();
         Query query = new Query();
         if (StringUtils.isNotEmpty(intentId)) {
@@ -186,8 +186,8 @@ public class FoodOrderService {
         if (request.getStatus() != null) {
             order.setStatus(OrderStatus.valueOf(request.getStatus()));
         }
-        if ( StringUtils.isNotEmpty(request.getPaymentStatus())){
-            if ( request.getPaymentStatus().equalsIgnoreCase("succeeded")){
+        if (StringUtils.isNotEmpty(request.getPaymentStatus())) {
+            if (request.getPaymentStatus().equalsIgnoreCase("succeeded")) {
                 payment(order);
             }
         }
@@ -235,7 +235,7 @@ public class FoodOrderService {
                 .supplierId(order.getSupplier().get_id())
                 .build();
         final PaymentIntent paymentIntent = stripeService.createPaymentIntent(req);
-        if ( paymentIntent != null){
+        if (paymentIntent != null) {
             log.info("Created payment intent {} with secret {} for order {}", paymentIntent.getId(), paymentIntent.getClientSecret(), order.getReference());
             order.setPaymentIntentId(paymentIntent.getId());
             order.setClientSecret(paymentIntent.getClientSecret());
@@ -262,11 +262,16 @@ public class FoodOrderService {
             final PaymentIntent paymentIntent = stripeService.retrieveStripePaymentIntent(localIntent.getIntentId());
             if (paymentIntent != null) {
                 if (paymentIntent.getStatus().equalsIgnoreCase("Succeeded")) {
+                    log.info("Order {} is Paid", order.getReference());
                     order.setStatus(OrderStatus.Paid);
                     order.setDatePaid(LocalDateTime.now());
                     final Map<String, Object> params = buildEmailParams(order);
                     final Email email = buildEmail(order, params);
-                    emailService.sendMail(email);
+                    Runnable task = () -> {
+                        emailService.sendMail(email);
+                    };
+                    Thread thread = new Thread(task);
+                    thread.start();
                 }
             }
         }
@@ -366,16 +371,16 @@ public class FoodOrderService {
                 message = "Your order is in progress";
             }
             case Ready -> {
-                if ( order.getServiceMode() == ServiceMode.COLLECTION){
+                if (order.getServiceMode() == ServiceMode.COLLECTION) {
                     message = "Your order is Ready for collection";
-                }else{
+                } else {
                     message = "Your order is Ready for Delivery";
                 }
             }
             case OutForDelivery -> {
-                if ( order.getServiceMode() == ServiceMode.COLLECTION){
+                if (order.getServiceMode() == ServiceMode.COLLECTION) {
                     message = "Your order is Ready for collection";
-                }else{
+                } else {
                     message = "Your order is Ready for Out for Delivery";
                 }
             }
