@@ -22,7 +22,6 @@ import java.util.Optional;
 @RestController
 @Slf4j
 @RequestMapping("/orders/v1/foods")
-@CrossOrigin
 public class FoodOrderController {
 
     @Autowired
