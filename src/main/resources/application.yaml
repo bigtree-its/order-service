@@ -6,6 +6,9 @@ jasypt:
 
 server:
   port: 8082
+
+auth:
+  permitAll: /orders/v1/foods
   
 spring:
   data:
