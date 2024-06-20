@@ -22,7 +22,7 @@ import java.util.Optional;
 @RestController
 @Slf4j
 @RequestMapping("/orders/v1/foods")
-@CrossOrigin
+@CrossOrigin(exposedHeaders = {"Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"}, allowedHeaders = {"Authorization", "Origin"}, origins = {"http://localhost:4200", "*"})
 public class FoodOrderController {
 
     @Autowired

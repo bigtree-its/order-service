@@ -9,20 +9,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+
 @Slf4j
 @RestController
-@RequestMapping("/orders/v1/foods/profiles")
-@CrossOrigin
+@CrossOrigin(exposedHeaders =
+        {"Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"},
+        allowedHeaders = {"Authorization", "Origin"},
+        origins = {"http://localhost:4200", "*"})
+@RequestMapping("/orders/v1/profiles")
 public class ProfileController {
 
     @Autowired
     ProfileService profileService;
 
-    @PostMapping("")
-    public ResponseEntity<ProfileResponse> getOrderProfile(@RequestBody ProfileRequest profileRequest) {
-        log.info("Request to get profile for {} = {}", profileRequest.getProfileType(), profileRequest.getProfileId());
-        final ProfileResponse response = profileService.getProfile(profileRequest);
-        log.info("Returning profile respose {} for {} = {}", response, profileRequest.getProfileType(), profileRequest.getProfileId());
+    @GetMapping("")
+    public ResponseEntity<ProfileResponse> getOrderProfile(
+            @RequestParam(value = "customer", required = false) String customer,
+            @RequestParam(value = "supplier", required = false) String supplier,
+            @RequestParam(value = "date", required = false) LocalDate date,
+            @RequestParam(value = "dateFrom", required = false) LocalDate dateFrom,
+            @RequestParam(value = "dateTo", required = false) LocalDate dateTo
+    ) {
+        log.info("Request to get profile for {}", supplier);
+        final ProfileResponse response = profileService.getProfile(customer, supplier, date, dateFrom, dateTo);
+        log.info("Returning profile response");
         return ResponseEntity.ok(response);
     }
 }

@@ -119,7 +119,7 @@ public class FoodOrderService {
             query.addCriteria(Criteria.where("customer.email").is(customer));
         }
         if (StringUtils.isNotEmpty(supplier)) {
-            query.addCriteria(Criteria.where("supplier._id").is(supplier));
+            query.addCriteria(Criteria.where("supplier.email").is(supplier));
         }
         if (date != null) {
             query.addCriteria(Criteria.where("dateCreated").is(date));

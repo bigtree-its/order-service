@@ -19,7 +19,7 @@ public class ProfileServiceTest {
     public void testThrowsExceptionWhenProfileTypeNotSupplied() {
         ProfileRequest request = ProfileRequest.builder().build();
         final ApiException apiException = Assertions.assertThrows(ApiException.class, () -> {
-            final ProfileResponse response = profileService.getProfile(request);
+            final ProfileResponse response = profileService.getProfile(null, null, null, null, null);
         });
 
         Assertions.assertEquals(apiException.getMessage(), "Profile type is mandatory");
@@ -29,7 +29,7 @@ public class ProfileServiceTest {
     public void testThrowsExceptionWhenProfileIDNotSupplied() {
         ProfileRequest request = ProfileRequest.builder().profileType("Supplier").build();
         final ApiException apiException = Assertions.assertThrows(ApiException.class, () -> {
-            final ProfileResponse response = profileService.getProfile(request);
+            final ProfileResponse response = profileService.getProfile(null, null, null, null, null);
         });
 
         Assertions.assertEquals(apiException.getMessage(), "Either profile email or ID is mandatory");
@@ -37,8 +37,7 @@ public class ProfileServiceTest {
 
     @Test
     public void testProfile(){
-        ProfileRequest request = ProfileRequest.builder().profileType("Supplier").profileEmail("nava.arul@gmail.com").build();
-        final ProfileResponse response = profileService.getProfile(request);
+        final ProfileResponse response = profileService.getProfile("nava.arul@gmail.com", null,null,null,null);
         Assertions.assertNotNull(response);
     }
 
