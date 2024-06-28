@@ -26,13 +26,13 @@ public class ProfileController {
     @GetMapping("")
     public ResponseEntity<ProfileResponse> getOrderProfile(
             @RequestParam(value = "customer", required = false) String customer,
-            @RequestParam(value = "supplier", required = false) String supplier,
+            @RequestParam(value = "cloudKitchenId", required = false) String cloudKitchenId,
             @RequestParam(value = "date", required = false) LocalDate date,
             @RequestParam(value = "dateFrom", required = false) LocalDate dateFrom,
             @RequestParam(value = "dateTo", required = false) LocalDate dateTo
     ) {
-        log.info("Request to get profile for {}", supplier);
-        final ProfileResponse response = profileService.getProfile(customer, supplier, date, dateFrom, dateTo);
+        log.info("Request to get profile for {}", cloudKitchenId);
+        final ProfileResponse response = profileService.getProfile(customer, cloudKitchenId, date, dateFrom, dateTo);
         log.info("Returning profile response");
         return ResponseEntity.ok(response);
     }

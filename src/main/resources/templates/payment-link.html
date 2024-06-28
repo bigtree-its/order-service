@@ -172,19 +172,19 @@
                 <tr>
                     <td width="80%" style="padding: 0 10px;">
                         <div>
-                            <span style="font-weight: 600;font-size: 20px;" th:utext="${supplier.name}"></span><br>
+                            <span style="font-weight: 600;font-size: 20px;" th:utext="${cloudKitchen.name}"></span><br>
                             <div>
-                                <span th:utext="${supplier.address.addressLine1}"
-                                    th:if="${supplier.address.addressLine1} != null"
+                                <span th:utext="${cloudKitchen.address.addressLine1}"
+                                    th:if="${cloudKitchen.address.addressLine1} != null"
                                     style="font-weight: 300;font-size: 12px;"></span>,
-                                <span th:utext="${supplier.address.addressLine2}" style="font-weight: 300;font-size: 12px;"
-                                    th:if="${supplier.address.addressLine2} != null"></span>,
-                                <span th:utext="${supplier.address.city}" th:if="${supplier.address.city} != null"
+                                <span th:utext="${cloudKitchen.address.addressLine2}" style="font-weight: 300;font-size: 12px;"
+                                    th:if="${cloudKitchen.address.addressLine2} != null"></span>,
+                                <span th:utext="${cloudKitchen.address.city}" th:if="${cloudKitchen.address.city} != null"
                                     style="font-weight: 300;font-size: 12px;"></span>,
-                                <span th:utext="${supplier.address.country}" style="font-weight: 300;font-size: 12px;"
-                                    th:if="${supplier.address.country} != null"></span>,
-                                <span th:utext="${supplier.address.postcode}" style="font-weight: 300;font-size: 12px;"
-                                    th:if="${supplier.address.postcode} != null"></span><br>
+                                <span th:utext="${cloudKitchen.address.country}" style="font-weight: 300;font-size: 12px;"
+                                    th:if="${cloudKitchen.address.country} != null"></span>,
+                                <span th:utext="${cloudKitchen.address.postcode}" style="font-weight: 300;font-size: 12px;"
+                                    th:if="${cloudKitchen.address.postcode} != null"></span><br>
                             </div>
                         </div>
                     </td>
@@ -297,20 +297,20 @@
             <hr>
             <p style="font-weight: 800; ">Collect At</p>
             <p>
-            <div th:if="${supplier.address.addressLine1} != null">
-                <span th:utext="${supplier.address.addressLine1}"></span><br>
+            <div th:if="${cloudKitchen.address.addressLine1} != null">
+                <span th:utext="${cloudKitchen.address.addressLine1}"></span><br>
             </div>
-            <div th:if="${supplier.address.addressLine2} != null">
-                <span th:utext="${supplier.address.addressLine2}"></span><br>
+            <div th:if="${cloudKitchen.address.addressLine2} != null">
+                <span th:utext="${cloudKitchen.address.addressLine2}"></span><br>
             </div>
-            <div th:if="${supplier.address.city} != null">
-                <span th:utext="${supplier.address.city}"></span><br>
+            <div th:if="${cloudKitchen.address.city} != null">
+                <span th:utext="${cloudKitchen.address.city}"></span><br>
             </div>
-            <div th:if="${supplier.address.country} != null">
-                <span th:utext="${supplier.address.country}"></span><br>
+            <div th:if="${cloudKitchen.address.country} != null">
+                <span th:utext="${cloudKitchen.address.country}"></span><br>
             </div>
-            <div th:if="${supplier.address.postcode} != null">
-                <span th:utext="${supplier.address.postcode}"></span><br>
+            <div th:if="${cloudKitchen.address.postcode} != null">
+                <span th:utext="${cloudKitchen.address.postcode}"></span><br>
             </div>
             </p>
             <hr>

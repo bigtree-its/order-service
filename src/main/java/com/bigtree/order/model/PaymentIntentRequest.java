@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 @Builder
 public class PaymentIntentRequest {
 
-    private String supplierId;
+    private String cloudKitchenId;
     private BigDecimal amount;
     private String currency;
     private String orderReference;

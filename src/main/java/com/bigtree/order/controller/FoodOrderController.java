@@ -55,12 +55,12 @@ public class FoodOrderController {
             @RequestParam(value = "intent", required = false) String intentId,
             @RequestParam(value = "ref", required = false) String reference,
             @RequestParam(value = "customer", required = false) String customer,
-            @RequestParam(value = "supplier", required = false) String supplier,
+            @RequestParam(value = "cloudKitchenId", required = false) String cloudKitchenId,
             @RequestParam(value = "date", required = false) LocalDate date,
             @RequestParam(value = "dateFrom", required = false) LocalDate dateFrom,
             @RequestParam(value = "dateTo", required = false) LocalDate dateTo) {
         log.info("Request to search orders");
-        final List<FoodOrder> result = foodOrderService.search(intentId, reference, customer, supplier, date, dateFrom, dateTo);
+        final List<FoodOrder> result = foodOrderService.search(intentId, reference, customer, cloudKitchenId, date, dateFrom, dateTo);
         log.info("Returning {} orders for search", result.size());
         return ResponseEntity.ok(result);
     }

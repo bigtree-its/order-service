@@ -28,7 +28,7 @@ public class FoodOrder {
     private OrderStatus status;
     private ServiceMode serviceMode;
     private Customer customer;
-    private FoodSupplier supplier;
+    private CloudKitchen cloudKitchen;
     private List<Item> items;
     private BigDecimal subTotal;
     private BigDecimal total;

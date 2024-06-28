@@ -23,7 +23,7 @@ public class DummyData {
                 .packingFee(BigDecimal.ONE)
                 .serviceMode(ServiceMode.DELIVERY)
                 .customer(createDummyCustomer())
-                .supplier(createDummySupplier())
+                .cloudKitchen(createDummySupplier())
                 .items(items)
                 .createdAt(LocalDateTime.now())
                 .expectedDeliveryDate(LocalDate.now())
@@ -32,8 +32,8 @@ public class DummyData {
         return order;
     }
 
-    public static FoodSupplier createDummySupplier() {
-        return FoodSupplier.builder()
+    public static CloudKitchen createDummySupplier() {
+        return CloudKitchen.builder()
                 .name("name")
                 .mobile("mobile")
                 .email("email")

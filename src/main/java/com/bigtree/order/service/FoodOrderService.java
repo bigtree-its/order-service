@@ -93,7 +93,7 @@ public class FoodOrderService {
         return updated;
     }
 
-    public List<FoodOrder> search(String intentId, String reference, String customer, String supplier,
+    public List<FoodOrder> search(String intentId, String reference, String customer, String cloudKitchenId,
                                   LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
         List<FoodOrder> result = new ArrayList<>();
         Query query = new Query();
@@ -118,8 +118,8 @@ public class FoodOrderService {
         if (StringUtils.isNotEmpty(customer)) {
             query.addCriteria(Criteria.where("customer.email").is(customer));
         }
-        if (StringUtils.isNotEmpty(supplier)) {
-            query.addCriteria(Criteria.where("supplier.email").is(supplier));
+        if (StringUtils.isNotEmpty(cloudKitchenId)) {
+            query.addCriteria(Criteria.where("cloudKitchen._id").is(cloudKitchenId));
         }
         if (date != null) {
             query.addCriteria(Criteria.where("dateCreated").is(date));
@@ -232,7 +232,7 @@ public class FoodOrderService {
                 .orderReference(order.getReference())
                 .currency("GBP")
                 .customerEmail(order.getCustomer().getEmail())
-                .supplierId(order.getSupplier().get_id())
+                .cloudKitchenId(order.getCloudKitchen().get_id())
                 .build();
         final PaymentIntent paymentIntent = stripeService.createPaymentIntent(req);
         if (paymentIntent != null) {
@@ -317,13 +317,13 @@ public class FoodOrderService {
         if (order.getStatus() == OrderStatus.Pending) {
             order.setStatus(OrderStatus.Accepted);
             order.setDateAccepted(LocalDateTime.now());
-            log.info("Order {} is accepted by Chef {}", order.getReference(), order.getSupplier().get_id());
+            log.info("Order {} is accepted by Chef {}", order.getReference(), order.getCloudKitchen().get_id());
             PaymentIntent paymentIntent = stripeService.createPaymentIntent(PaymentIntentRequest.builder()
                     .orderReference(order.getReference())
                     .amount(order.getTotal())
                     .currency(order.getCurrency())
                     .customerEmail(order.getCustomer().getEmail())
-                    .supplierId(order.getSupplier().get_id())
+                    .cloudKitchenId(order.getCloudKitchen().get_id())
                     .build());
             final Map<String, Object> params = buildEmailParams(order);
             params.put("linkUrl", "http://localhost:4200/make_payment?ref=" + order.getReference() + "&intent=" + paymentIntent.getId());
@@ -338,7 +338,7 @@ public class FoodOrderService {
     private Email buildEmail(FoodOrder order, Map<String, Object> params) {
         final Email email = Email.builder()
                 .to(order.getCustomer().getEmail())
-                .subject("Your DESILAND order " + order.getReference())
+                .subject("Your order " + order.getReference())
                 .params(params)
                 .build();
         return email;
@@ -352,7 +352,7 @@ public class FoodOrderService {
         params.put("serviceMode", order.getServiceMode().name());
         params.put("customer", order.getCustomer());
         params.put("items", order.getItems());
-        params.put("supplier", order.getSupplier());
+        params.put("cloudKitchen", order.getCloudKitchen());
         return params;
     }
 

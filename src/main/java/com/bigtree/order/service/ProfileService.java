@@ -27,17 +27,17 @@ public class ProfileService {
     @Autowired
     MongoTemplate mongoTemplate;
 
-    public ProfileResponse getProfile(String customer, String supplier, LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
+    public ProfileResponse getProfile(String customer, String cloudKitchenId, LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
         ProfileResponse response = ProfileResponse.builder().build();
         log.info("Processing profile request...");
         Query query = new Query();
 
-        if (StringUtils.isEmpty(customer) && StringUtils.isEmpty(supplier)) {
-            log.error("Supplier or Customer email is mandatory");
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Supplier or Customer email is mandatory");
+        if (StringUtils.isEmpty(customer) && StringUtils.isEmpty(cloudKitchenId)) {
+            log.error("CloudKitchen Id or Customer email is mandatory");
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "CloudKitchen Id or Customer email is mandatory");
         }
-        if (StringUtils.isNotEmpty(supplier)) {
-            query.addCriteria(Criteria.where("supplier.email").is(supplier));
+        if (StringUtils.isNotEmpty(cloudKitchenId)) {
+            query.addCriteria(Criteria.where("cloudKitchen._id").is(cloudKitchenId));
 
         }
         if (StringUtils.isNotEmpty(customer)) {
