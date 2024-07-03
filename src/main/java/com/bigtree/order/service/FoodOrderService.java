@@ -206,7 +206,14 @@ public class FoodOrderService {
         switch (action) {
             case "Accept" -> acceptOrder(foodOrder);
             case "Submit" -> submitOrder(foodOrder);
-            case "Cancel" -> cancelOrder(foodOrder);
+            case "Cancel" -> {
+                if (foodOrder.getStatus() == OrderStatus.Draft) {
+                    deleteOrder(foodOrder);
+                } else {
+                    cancelOrder(foodOrder);
+                }
+
+            }
             case "Reject" -> rejectOrder(foodOrder);
             case "Ready" -> {
                 foodOrder.setStatus(OrderStatus.Ready);

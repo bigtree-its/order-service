@@ -8,7 +8,7 @@ server:
   port: 8082
 
 auth:
-  permitAll: /orders/v1/profiles,/orders/v1/foods
+  permitAll: /orders/v1/profiles,/orders/v1/foods,/orders/v1/foods/action,orders/v1/foods/stripe-payments/payment-intent
 spring:
   data:
     mongodb:
