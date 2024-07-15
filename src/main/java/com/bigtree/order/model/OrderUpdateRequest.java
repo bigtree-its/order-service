@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -15,7 +15,8 @@ public class OrderUpdateRequest {
     String paymentIntentId;
     String paymentStatus;
     String status;
-    String chefNotes;
+    private List<Note> customerNotes;
+    private List<Note>  kitchenNotes;
     String customerComments;
     LocalDate expectedCollectionDate;
     LocalDate expectedDeliveryDate;

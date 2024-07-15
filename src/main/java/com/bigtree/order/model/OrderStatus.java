@@ -1,8 +1,7 @@
 package com.bigtree.order.model;
 
 public enum OrderStatus {
-    Draft,
-    Created,
+    New,
     Paid,
     InProgress,
     Pending,
@@ -13,7 +12,8 @@ public enum OrderStatus {
     Collected,
     Cancelled,
     Refunded,
+    Refund_Started,
     Delivered,
-    Rejected,
+    Declined,
     Payment_Error,
 }

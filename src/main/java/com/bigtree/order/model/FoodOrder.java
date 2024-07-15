@@ -21,11 +21,13 @@ public class FoodOrder {
     private String paymentIntentId;
     private String clientSecret;
     private String reference;
-    private String notes;
+    private List<Note> customerNotes;
+    private List<Note>  kitchenNotes;
     private String customerComment;
     private Integer customerRating;
     private String currency;
     private OrderStatus status;
+    private String kitchenAction;
     private ServiceMode serviceMode;
     private Customer customer;
     private CloudKitchen cloudKitchen;
@@ -45,6 +47,7 @@ public class FoodOrder {
     private LocalDateTime dateCollected;
     private LocalDateTime dateRejected;
     private LocalDateTime dateRefunded;
+    private LocalDateTime dateRefundStarted;
     private LocalDateTime datePaid;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

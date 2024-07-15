@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -44,11 +45,11 @@ public class FoodOrderService {
     public FoodOrder createOrder(FoodOrder order, String action) {
         FoodOrder foodOrder = null;
         if (StringUtils.isEmpty(order.getReference())) {
-            String salt1 = RandomStringUtils.random(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
-            String salt2 = RandomStringUtils.random(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
-            String salt3 = RandomStringUtils.random(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
+            String salt1 = RandomStringUtils.random(2, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
+            String salt2 = RandomStringUtils.random(2, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
+            String salt3 = RandomStringUtils.random(2, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
             order.setReference(salt1 + "-" + salt2 + "-" + salt3);
-            order.setStatus(OrderStatus.Draft);
+            order.setStatus(OrderStatus.New);
             order.setDateCreated(LocalDate.now());
             order.setCreatedAt(LocalDateTime.now());
             foodOrder = customerOrderRepository.save(order);
@@ -56,11 +57,6 @@ public class FoodOrderService {
             if (StringUtils.isNotEmpty(action)) {
                 foodOrder = action(foodOrder.getReference(), action);
             }
-//            else {
-//                final Map<String, Object> params = buildEmailParams(response);
-//                final Email email = buildEmail(response, params);
-//                emailService.sendMail(email);
-//            }
         } else {
             FoodOrder loaded = customerOrderRepository.findByReference(order.getReference());
             if (loaded != null) {
@@ -82,7 +78,8 @@ public class FoodOrderService {
         loaded.setPackingFee(order.getPackingFee());
         loaded.setDeliveryFee(order.getDeliveryFee());
         loaded.setStatus(order.getStatus());
-        loaded.setNotes(order.getNotes());
+        loaded.setCustomerNotes(order.getCustomerNotes());
+        loaded.setKitchenNotes(order.getKitchenNotes());
         loaded.setServiceMode(order.getServiceMode());
         loaded.setTotal(order.getTotal());
         FoodOrder updated = customerOrderRepository.save(loaded);
@@ -168,8 +165,11 @@ public class FoodOrderService {
             log.error("Cannot find an order {}", request.getReference());
             throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Either valid order reference or payment intent id is mandatory");
         }
-        if (StringUtils.isNotEmpty(request.getChefNotes())) {
-            order.setNotes(request.getChefNotes());
+        if (!CollectionUtils.isEmpty(request.getKitchenNotes())) {
+            order.setKitchenNotes(request.getKitchenNotes());
+        }
+        if (!CollectionUtils.isEmpty(request.getCustomerNotes())) {
+            order.setCustomerNotes(request.getCustomerNotes());
         }
         if (StringUtils.isNotEmpty(request.getCustomerComments())) {
             order.setCustomerComment(request.getCustomerComments());
@@ -207,14 +207,14 @@ public class FoodOrderService {
             case "Accept" -> acceptOrder(foodOrder);
             case "Submit" -> submitOrder(foodOrder);
             case "Cancel" -> {
-                if (foodOrder.getStatus() == OrderStatus.Draft) {
+                if (foodOrder.getStatus() == OrderStatus.New) {
                     deleteOrder(foodOrder);
                 } else {
                     cancelOrder(foodOrder);
                 }
 
             }
-            case "Reject" -> rejectOrder(foodOrder);
+            case "Decline" -> declineOrder(foodOrder);
             case "Ready" -> {
                 foodOrder.setStatus(OrderStatus.Ready);
             }
@@ -226,6 +226,7 @@ public class FoodOrderService {
                 foodOrder = paymentIntent(foodOrder);
             }
             case "Refund" -> refundOrder(foodOrder);
+            case "Start Refund" -> startRefundOrder(foodOrder);
             case "Delete" -> deleteOrder(foodOrder);
             default -> throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Action not supported");
         }
@@ -251,15 +252,29 @@ public class FoodOrderService {
         return order;
     }
 
-    private void refundOrder(FoodOrder order) {
-        if (order.getStatus() == OrderStatus.Paid) {
-            order.setStatus(OrderStatus.Cancelled);
-            order.setDateRefunded(LocalDateTime.now());
+    private void startRefundOrder(FoodOrder order) {
+        if (order.getStatus() == OrderStatus.Declined) {
+            order.setStatus(OrderStatus.Refund_Started);
+            order.setDateRefundStarted(LocalDateTime.now());
+            customerOrderRepository.save(order);
             final Map<String, Object> params = buildEmailParams(order);
             final Email email = buildEmail(order, params);
             emailService.sendMail(email);
         } else {
-            log.error("Order {} cannot be cancelled at this stage. {}", order.getReference(), order.getStatus().name());
+            log.error("Refund for order {} cannot be started at this stage. {}", order.getReference(), order.getStatus().name());
+        }
+    }
+
+    private void refundOrder(FoodOrder order) {
+        if (order.getStatus() == OrderStatus.Refund_Started) {
+            order.setStatus(OrderStatus.Refunded);
+            order.setDateRefunded(LocalDateTime.now());
+            customerOrderRepository.save(order);
+            final Map<String, Object> params = buildEmailParams(order);
+            final Email email = buildEmail(order, params);
+            emailService.sendMail(email);
+        } else {
+            log.error("Order {} cannot be refunded at this stage. {}", order.getReference(), order.getStatus().name());
         }
     }
 
@@ -272,6 +287,7 @@ public class FoodOrderService {
                     log.info("Order {} is Paid", order.getReference());
                     order.setStatus(OrderStatus.Paid);
                     order.setDatePaid(LocalDateTime.now());
+                    customerOrderRepository.save(order);
                     final Map<String, Object> params = buildEmailParams(order);
                     final Email email = buildEmail(order, params);
                     Runnable task = () -> {
@@ -288,6 +304,7 @@ public class FoodOrderService {
         if (order.getStatus() == OrderStatus.Pending) {
             order.setStatus(OrderStatus.Cancelled);
             order.setDateCancelled(LocalDateTime.now());
+            customerOrderRepository.save(order);
             final Map<String, Object> params = buildEmailParams(order);
             final Email email = buildEmail(order, params);
             emailService.sendMail(email);
@@ -296,20 +313,21 @@ public class FoodOrderService {
         }
     }
 
-    private void rejectOrder(FoodOrder order) {
-        if (order.getStatus() == OrderStatus.Pending) {
-            order.setStatus(OrderStatus.Rejected);
+    private void declineOrder(FoodOrder order) {
+        if (order.getStatus() == OrderStatus.Paid || order.getStatus() == OrderStatus.New) {
+            order.setStatus(OrderStatus.Declined);
             order.setDateRejected(LocalDateTime.now());
+            customerOrderRepository.save(order);
             final Map<String, Object> params = buildEmailParams(order);
             final Email email = buildEmail(order, params);
             emailService.sendMail(email);
         } else {
-            log.error("Order {} cannot be rejected at this stage. {}", order.getReference(), order.getStatus().name());
+            log.error("Order {} cannot be declined at this stage. {}", order.getReference(), order.getStatus().name());
         }
     }
 
     private void submitOrder(FoodOrder order) {
-        if (order.getStatus() == OrderStatus.Draft) {
+        if (order.getStatus() == OrderStatus.New) {
             order.setStatus(OrderStatus.Pending);
             order.setDateSubmitted(LocalDateTime.now());
             final Map<String, Object> params = buildEmailParams(order);
@@ -321,20 +339,13 @@ public class FoodOrderService {
     }
 
     private void acceptOrder(FoodOrder order) {
-        if (order.getStatus() == OrderStatus.Pending) {
-            order.setStatus(OrderStatus.Accepted);
+        if (order.getStatus() == OrderStatus.Paid) {
+            order.setStatus(OrderStatus.InProgress);
+            order.setKitchenAction("Accepted");
             order.setDateAccepted(LocalDateTime.now());
-            log.info("Order {} is accepted by Chef {}", order.getReference(), order.getCloudKitchen().get_id());
-            PaymentIntent paymentIntent = stripeService.createPaymentIntent(PaymentIntentRequest.builder()
-                    .orderReference(order.getReference())
-                    .amount(order.getTotal())
-                    .currency(order.getCurrency())
-                    .customerEmail(order.getCustomer().getEmail())
-                    .cloudKitchenId(order.getCloudKitchen().get_id())
-                    .build());
+            customerOrderRepository.save(order);
+            log.info("Order {} is accepted by kitchen {}", order.getReference(), order.getCloudKitchen().get_id());
             final Map<String, Object> params = buildEmailParams(order);
-            params.put("linkUrl", "http://localhost:4200/make_payment?ref=" + order.getReference() + "&intent=" + paymentIntent.getId());
-            params.put("linkText", "Make Payment");
             final Email email = buildEmail(order, params);
             emailService.sendMail(email);
         } else {
@@ -363,68 +374,69 @@ public class FoodOrderService {
         return params;
     }
 
-    private String emailMessage(FoodOrder order) {
-        String message = "";
+    private List<String> emailMessage(FoodOrder order) {
+       List<String> messages = new ArrayList<>();
         switch (order.getStatus()) {
-            case Draft -> {
-                message = "Your order still in Draft state. Please submit to chef.";
-            }
-            case Created -> {
+            case New -> {
+                messages.add("Your new order");
             }
             case Paid -> {
                 if (order.getServiceMode() == ServiceMode.COLLECTION) {
-                    message = "Your order has been Paid. Will notify you once it is Ready for collection";
+                    messages.add("Your order has been Paid. Will notify you once it is Ready for collection");
                 } else {
-                    message = "Your order has been Paid. Will notify you once it is Ready for delivery";
+                    messages.add("Your order has been Paid. Will notify you once it is Ready for delivery");
                 }
             }
             case InProgress -> {
-                message = "Your order is in progress";
+                messages.add("Your order is in progress");
             }
             case Ready -> {
                 if (order.getServiceMode() == ServiceMode.COLLECTION) {
-                    message = "Your order is Ready for collection";
+                    messages.add("Your order is Ready for collection");
                 } else {
-                    message = "Your order is Ready for Delivery";
+                    messages.add("Your order is Ready for Delivery");
                 }
             }
             case OutForDelivery -> {
                 if (order.getServiceMode() == ServiceMode.COLLECTION) {
-                    message = "Your order is Ready for collection";
+                    messages.add("Your order is Ready for collection");
                 } else {
-                    message = "Your order is Out for Delivery";
+                    messages.add("Your order is Out for Delivery");
                 }
             }
-            case Pending -> {
-                message = "Your order has been submitted to Chef and waiting to be accepted.";
-            }
             case Accepted -> {
-                message = "Your order has been accepted by Chef. Please make a payment using below link.";
+                messages.add("Your order has been confirmed by the kitchen");
             }
             case Collected -> {
-                message = "Your have collected your order.";
+                messages.add("Your have collected your order.");
             }
             case Cancelled -> {
-                message = "Your order has been cancelled.";
+                messages.add("Your order has been cancelled.");
+            }
+            case Refund_Started -> {
+                messages.add("We have initiated refund on your cancelled order.");
             }
             case Refunded -> {
-                message = "Your order has been refunded.";
+                messages.add("Your order has been fully refunded.");
             }
             case Delivered -> {
-                message = "Your order has been delivered.";
+                messages.add("Your order has been delivered.");
             }
-            case Rejected -> {
-                message = "Sorry the chef is unable to accept your order at this point. Please see the notes from Chef.";
+            case Declined -> {
+                messages.add("Sorry the kitchen is unable to pickup your order at this point. ");
+                messages.add("Please see the notes from the Kitchen. ");
+                messages.add("We are processing your refund and it will be with your account within 5 business days. ");
+                messages.add("Please contact the customer support team for further assistance on the refund.");
             }
             case Payment_Error -> {
-                message = "Sorry there was an payment error for your order. Please make a payment.";
+                messages.add("Sorry there was an payment error for your order. Please make a payment");
             }
         }
-        return message;
+        return messages;
     }
 
     private void deleteOrder(FoodOrder order) {
-        if (order.getStatus() == OrderStatus.Draft || order.getStatus() == OrderStatus.Cancelled) {
+        if (order.getStatus() == OrderStatus.New || order.getStatus() == OrderStatus.Cancelled) {
             customerOrderRepository.delete(order);
             log.info("Order {} has been deleted", order.getReference());
         } else {

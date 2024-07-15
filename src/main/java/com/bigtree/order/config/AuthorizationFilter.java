@@ -35,6 +35,8 @@ public class AuthorizationFilter extends OncePerRequestFilter {
                     "PermitAll", null, null);
             SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
             log.info("Authorized");
+        }else{
+            log.info("This endpoint is not authorised. Please whitelist {}",servletPath.trim());
         }
         chain.doFilter(request, response);
     }

@@ -8,12 +8,12 @@ server:
   port: 8082
 
 auth:
-  permitAll: /orders/v1/profiles,/orders/v1/foods,/orders/v1/foods/action,orders/v1/foods/stripe-payments/payment-intent
+  permitAll: /kitchen-orders/v1/profile,/kitchen-orders/v1,/orders/v1/foods,/orders/v1/foods/action,orders/v1/foods/stripe-payments/payment-intent
 spring:
   data:
     mongodb:
-      uri: mongodb+srv://productsuser:productspassword@cluster0.wzm30.gcp.mongodb.net/?retryWrites=true&w=majority
-      database: test
+      uri: mongodb+srv://pichaiordersuser:fR7aMp9k1UAEH041@pichaiorders.gsurasg.mongodb.net/?retryWrites=true&w=majority&appName=PichaiOrders
+      database: db_pichai_orders
   mail:
     default-encoding: UTF-8
     host: smtp.gmail.com
