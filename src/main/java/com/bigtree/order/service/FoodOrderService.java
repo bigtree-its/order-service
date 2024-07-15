@@ -225,7 +225,7 @@ public class FoodOrderService {
             case "IntentToPay" -> {
                 foodOrder = paymentIntent(foodOrder);
             }
-            case "Refund" -> refundOrder(foodOrder);
+            case "Complete Refund" -> refundOrder(foodOrder);
             case "Start Refund" -> startRefundOrder(foodOrder);
             case "Delete" -> deleteOrder(foodOrder);
             default -> throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Action not supported");
@@ -414,7 +414,7 @@ public class FoodOrderService {
                 messages.add("Your order has been cancelled.");
             }
             case Refund_Started -> {
-                messages.add("We have initiated refund on your cancelled order.");
+                messages.add("We have initiated refund on your order.");
             }
             case Refunded -> {
                 messages.add("Your order has been fully refunded.");
