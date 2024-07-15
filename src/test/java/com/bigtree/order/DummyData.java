@@ -15,7 +15,7 @@ public class DummyData {
         List<Item> items = new ArrayList<>();
         items.add(i);
         FoodOrder order = FoodOrder.builder()
-                .status(OrderStatus.Created)
+                .status(OrderStatus.New)
                 .serviceFee(BigDecimal.ONE)
                 .subTotal(BigDecimal.ONE)
                 .total(BigDecimal.ONE)

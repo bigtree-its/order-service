@@ -1,19 +1,17 @@
 package com.bigtree.order.model;
 
-public enum OrderStatus {
-    New,
-    Paid,
-    InProgress,
-    Pending,
-    Ready,
-    Dispatched,
-    OutForDelivery,
-    Accepted,
-    Collected,
-    Cancelled,
-    Refunded,
-    Refund_Started,
-    Delivered,
-    Declined,
-    Payment_Error,
+public interface OrderStatus {
+    public static final String New ="New";
+    public static final String Paid ="Paid";
+    public static final String In_Progress ="In Progress";
+    public static final String Ready ="Ready";
+    public static final String Out_For_Delivery ="Out for delivery";
+    public static final String Collected ="Collected";
+    public static final String Delivered ="Delivered";
+    public static final String Refund_Started ="Refund Started";
+    public static final String Refunded ="Refunded";
+    public static final String Declined ="Declined";
+    public static final String Cancelled ="Cancelled";
+    public static final String Payment_Error ="Payment Error";
+
 }

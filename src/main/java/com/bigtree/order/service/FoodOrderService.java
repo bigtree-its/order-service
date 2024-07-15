@@ -184,7 +184,7 @@ public class FoodOrderService {
             order.setExpectedDeliveryDate(request.getExpectedDeliveryDate());
         }
         if (request.getStatus() != null) {
-            order.setStatus(OrderStatus.valueOf(request.getStatus()));
+            order.setStatus(request.getStatus());
         }
         if (StringUtils.isNotEmpty(request.getPaymentStatus())) {
             if (request.getPaymentStatus().equalsIgnoreCase("succeeded")) {
@@ -204,22 +204,20 @@ public class FoodOrderService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Order not found");
         }
         switch (action) {
-            case "Accept" -> acceptOrder(foodOrder);
-            case "Submit" -> submitOrder(foodOrder);
+            case "Pickup" -> pickup(foodOrder);
             case "Cancel" -> {
-                if (foodOrder.getStatus() == OrderStatus.New) {
+                if (foodOrder.getStatus().equalsIgnoreCase(OrderStatus.New)) {
                     deleteOrder(foodOrder);
-                } else {
+                } if (foodOrder.getStatus().equalsIgnoreCase(OrderStatus.Paid)) {
                     cancelOrder(foodOrder);
                 }
-
             }
             case "Decline" -> declineOrder(foodOrder);
             case "Ready" -> {
                 foodOrder.setStatus(OrderStatus.Ready);
             }
-            case "OutForDelivery" -> {
-                foodOrder.setStatus(OrderStatus.OutForDelivery);
+            case "Out for delivery" -> {
+                foodOrder.setStatus(OrderStatus.Out_For_Delivery);
             }
             case "Pay" -> payment(foodOrder);
             case "IntentToPay" -> {
@@ -253,7 +251,7 @@ public class FoodOrderService {
     }
 
     private void startRefundOrder(FoodOrder order) {
-        if (order.getStatus() == OrderStatus.Declined) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.Declined)) {
             order.setStatus(OrderStatus.Refund_Started);
             order.setDateRefundStarted(LocalDateTime.now());
             customerOrderRepository.save(order);
@@ -261,12 +259,12 @@ public class FoodOrderService {
             final Email email = buildEmail(order, params);
             emailService.sendMail(email);
         } else {
-            log.error("Refund for order {} cannot be started at this stage. {}", order.getReference(), order.getStatus().name());
+            log.error("Refund for order {} cannot be started at this stage. {}", order.getReference(), order.getStatus());
         }
     }
 
     private void refundOrder(FoodOrder order) {
-        if (order.getStatus() == OrderStatus.Refund_Started) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.Refund_Started)) {
             order.setStatus(OrderStatus.Refunded);
             order.setDateRefunded(LocalDateTime.now());
             customerOrderRepository.save(order);
@@ -274,7 +272,7 @@ public class FoodOrderService {
             final Email email = buildEmail(order, params);
             emailService.sendMail(email);
         } else {
-            log.error("Order {} cannot be refunded at this stage. {}", order.getReference(), order.getStatus().name());
+            log.error("Order {} cannot be refunded at this stage. {}", order.getReference(), order.getStatus());
         }
     }
 
@@ -301,7 +299,7 @@ public class FoodOrderService {
     }
 
     private void cancelOrder(FoodOrder order) {
-        if (order.getStatus() == OrderStatus.Pending) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.Paid)) {
             order.setStatus(OrderStatus.Cancelled);
             order.setDateCancelled(LocalDateTime.now());
             customerOrderRepository.save(order);
@@ -309,12 +307,12 @@ public class FoodOrderService {
             final Email email = buildEmail(order, params);
             emailService.sendMail(email);
         } else {
-            log.error("Order {} cannot be cancelled at this stage. {}", order.getReference(), order.getStatus().name());
+            log.error("Order {} cannot be cancelled at this stage. {}", order.getReference(), order.getStatus());
         }
     }
 
     private void declineOrder(FoodOrder order) {
-        if (order.getStatus() == OrderStatus.Paid || order.getStatus() == OrderStatus.New) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.Paid)  || order.getStatus().equalsIgnoreCase(OrderStatus.New)) {
             order.setStatus(OrderStatus.Declined);
             order.setDateRejected(LocalDateTime.now());
             customerOrderRepository.save(order);
@@ -322,34 +320,22 @@ public class FoodOrderService {
             final Email email = buildEmail(order, params);
             emailService.sendMail(email);
         } else {
-            log.error("Order {} cannot be declined at this stage. {}", order.getReference(), order.getStatus().name());
+            log.error("Order {} cannot be declined at this stage. {}", order.getReference(), order.getStatus());
         }
     }
 
-    private void submitOrder(FoodOrder order) {
-        if (order.getStatus() == OrderStatus.New) {
-            order.setStatus(OrderStatus.Pending);
-            order.setDateSubmitted(LocalDateTime.now());
-            final Map<String, Object> params = buildEmailParams(order);
-            final Email email = buildEmail(order, params);
-            emailService.sendMail(email);
-        } else {
-            log.error("Order {} cannot be submitted at this stage. {}", order.getReference(), order.getStatus().name());
-        }
-    }
-
-    private void acceptOrder(FoodOrder order) {
-        if (order.getStatus() == OrderStatus.Paid) {
-            order.setStatus(OrderStatus.InProgress);
-            order.setKitchenAction("Accepted");
+    private void pickup(FoodOrder order) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.Paid)) {
+            order.setStatus(OrderStatus.In_Progress);
+            order.setKitchenAction("Pickup");
             order.setDateAccepted(LocalDateTime.now());
             customerOrderRepository.save(order);
-            log.info("Order {} is accepted by kitchen {}", order.getReference(), order.getCloudKitchen().get_id());
+            log.info("Order {} is picked up by kitchen {}", order.getReference(), order.getCloudKitchen().get_id());
             final Map<String, Object> params = buildEmailParams(order);
             final Email email = buildEmail(order, params);
             emailService.sendMail(email);
         } else {
-            log.error("Order {} cannot accepted at this stage. {}", order.getReference(), order.getStatus().name());
+            log.error("Order {} cannot picked up at this stage. {}", order.getReference(), order.getStatus());
         }
     }
 
@@ -366,7 +352,7 @@ public class FoodOrderService {
         Map<String, Object> params = new HashMap<>();
         params.put("message", emailMessage(order));
         params.put("order", order);
-        params.put("status", order.getStatus().name());
+        params.put("status", order.getStatus());
         params.put("serviceMode", order.getServiceMode().name());
         params.put("customer", order.getCustomer());
         params.put("items", order.getItems());
@@ -377,58 +363,51 @@ public class FoodOrderService {
     private List<String> emailMessage(FoodOrder order) {
        List<String> messages = new ArrayList<>();
         switch (order.getStatus()) {
-            case New -> {
+            case "New" -> {
                 messages.add("Your new order");
             }
-            case Paid -> {
+            case "Paid" -> {
                 if (order.getServiceMode() == ServiceMode.COLLECTION) {
-                    messages.add("Your order has been Paid. Will notify you once it is Ready for collection");
+                    messages.add("Your order has been Paid. We will notify you once it is Ready for collection");
                 } else {
-                    messages.add("Your order has been Paid. Will notify you once it is Ready for delivery");
+                    messages.add("Your order has been Paid. We will  notify you once it is Ready for delivery");
                 }
             }
-            case InProgress -> {
+            case "In Progress" -> {
                 messages.add("Your order is in progress");
             }
-            case Ready -> {
+            case "Ready" -> {
                 if (order.getServiceMode() == ServiceMode.COLLECTION) {
                     messages.add("Your order is Ready for collection");
                 } else {
                     messages.add("Your order is Ready for Delivery");
                 }
             }
-            case OutForDelivery -> {
-                if (order.getServiceMode() == ServiceMode.COLLECTION) {
-                    messages.add("Your order is Ready for collection");
-                } else {
-                    messages.add("Your order is Out for Delivery");
-                }
+            case "Out for delivery" -> {
+                messages.add("Your order is Out for Delivery");
             }
-            case Accepted -> {
-                messages.add("Your order has been confirmed by the kitchen");
-            }
-            case Collected -> {
+            case "Collected" -> {
                 messages.add("Your have collected your order.");
             }
-            case Cancelled -> {
+            case "Cancelled" -> {
                 messages.add("Your order has been cancelled.");
             }
-            case Refund_Started -> {
+            case "Refund Started" -> {
                 messages.add("We have initiated refund on your order.");
             }
-            case Refunded -> {
+            case "Refunded" -> {
                 messages.add("Your order has been fully refunded.");
             }
-            case Delivered -> {
+            case "Delivered" -> {
                 messages.add("Your order has been delivered.");
             }
-            case Declined -> {
+            case "Declined" -> {
                 messages.add("Sorry the kitchen is unable to pickup your order at this point. ");
                 messages.add("Please see the notes from the Kitchen. ");
                 messages.add("We are processing your refund and it will be with your account within 5 business days. ");
                 messages.add("Please contact the customer support team for further assistance on the refund.");
             }
-            case Payment_Error -> {
+            case "Payment Error" -> {
                 messages.add("Sorry there was an payment error for your order. Please make a payment");
             }
         }
@@ -436,11 +415,11 @@ public class FoodOrderService {
     }
 
     private void deleteOrder(FoodOrder order) {
-        if (order.getStatus() == OrderStatus.New || order.getStatus() == OrderStatus.Cancelled) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.New) || order.getStatus().equalsIgnoreCase(OrderStatus.Cancelled)) {
             customerOrderRepository.delete(order);
             log.info("Order {} has been deleted", order.getReference());
         } else {
-            log.info("Order {} cannot be deleted at this point {}", order.getReference(), order.getStatus().name());
+            log.info("Order {} cannot be deleted at this point {}", order.getReference(), order.getStatus());
         }
     }
 

@@ -26,7 +26,7 @@ public class FoodOrder {
     private String customerComment;
     private Integer customerRating;
     private String currency;
-    private OrderStatus status;
+    private String status;
     private String kitchenAction;
     private ServiceMode serviceMode;
     private Customer customer;

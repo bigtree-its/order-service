@@ -55,8 +55,7 @@
         .banner {
             height: 50px;
             line-height: 50px;
-            font-size: 30px;
-            color: #deff08;
+            color: #ffb524;
             font-weight: 900;
             font-family: "Bebas Neue", sans-serif;
         }
@@ -150,17 +149,17 @@
 </head>
 <body style="margin: 0 !important; padding: 0 !important;" >
     <div class="main-body">
-        <div class="banner">
-            <span>DESILAND</span>
+        <div style="margin:30px 0;color: #ffb524;font-weight: 900;">
+            <h1>Pichai</h1>
         </div>
         <div class="order-header">
-            <span>Your Order #<span th:utext="${order.reference}"></span>
+            <span>Your Order #<span th:utext="${order.reference}"/></span>
         </div>
 
         <div align="center" class="order-details">
-            <p>
-                <span th:utext="${message}"></span>
-            </p>
+            <div th:each="msg: ${message}" style="padding:3px 0;display:block;">
+                <span th:utext="${msg}"></span>
+            </div>
         </div>
         <div style="border-bottom: 1px solid #e2e2e2;padding:5px 0;margin-bottom:5px;">
             <div>
@@ -339,13 +338,13 @@
         </div>
 
         <div style="padding:5p 0x;margin:5px 0;">
-            <span>We hope to welcome you back to www.desiland.co.uk soon!</span>
+            <span>We hope to welcome you back to www.pichai.co.uk soon!</span>
             <span>Best Regards,</span>
-            <span>The Desiland Team</span>
+            <span>The Team</span>
         </div>
         <div style="padding:10px;margin:5px 0;background-color: #f3f3f3;">
             <p>
-                ©2024-2024 Desiland Ltd. Registered in Scotland. #SC595168. VAT No #295285756
+                ©2024-2024 pichai Ltd. Registered in Scotland. #SC595168. VAT No #295285756
             </p>
         </div>
     </div>
