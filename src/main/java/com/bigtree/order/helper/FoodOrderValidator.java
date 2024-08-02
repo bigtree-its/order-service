@@ -65,7 +65,7 @@ public class FoodOrderValidator {
                   || StringUtils.isEmpty(customer.getAddress().getAddressLine1())
                   || StringUtils.isEmpty(customer.getAddress().getAddressLine2())
                   || StringUtils.isEmpty(customer.getAddress().getCity())
-                  || StringUtils.isEmpty(customer.getAddress().getCountry())
+                  || StringUtils.isEmpty(customer.getAddress().getPostcode())
           ){
               throw new ApiException(HttpStatus.BAD_REQUEST,"Customer", "Customer Address cannot be empty");
           }

@@ -46,9 +46,11 @@ public class FoodOrder {
     private LocalDateTime dateCancelled;
     private LocalDateTime dateCollected;
     private LocalDateTime dateRejected;
+    private LocalDateTime dateReady;
     private LocalDateTime dateRefunded;
     private LocalDateTime dateRefundStarted;
     private LocalDateTime datePaid;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
 }

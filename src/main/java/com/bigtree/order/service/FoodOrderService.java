@@ -214,10 +214,7 @@ public class FoodOrderService {
             }
             case "Decline" -> declineOrder(foodOrder);
             case "Ready" -> {
-                foodOrder.setStatus(OrderStatus.Ready);
-            }
-            case "Out for delivery" -> {
-                foodOrder.setStatus(OrderStatus.Out_For_Delivery);
+                readyOrder(foodOrder);
             }
             case "Pay" -> payment(foodOrder);
             case "IntentToPay" -> {
@@ -225,11 +222,65 @@ public class FoodOrderService {
             }
             case "Complete Refund" -> refundOrder(foodOrder);
             case "Start Refund" -> startRefundOrder(foodOrder);
+            case "Collected" -> orderCollected(foodOrder);
+            case "Delivered" -> orderDelivered(foodOrder);
+            case "Out for delivery" -> orderOutForDelivery(foodOrder);
             case "Delete" -> deleteOrder(foodOrder);
             default -> throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "Action not supported");
         }
 
         return foodOrder;
+    }
+
+    private void readyOrder(FoodOrder order) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.In_Progress)) {
+            order.setStatus(OrderStatus.Ready);
+            order.setDateReady(LocalDateTime.now());
+            customerOrderRepository.save(order);
+            final Map<String, Object> params = buildEmailParams(order);
+            final Email email = buildEmail(order, params);
+            emailService.sendMail(email);
+        } else {
+            log.error("Order {} cannot be set as Ready at this stage {}", order.getReference(), order.getStatus());
+        }
+    }
+    private void orderCollected(FoodOrder order) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.Ready)) {
+            order.setStatus(OrderStatus.Collected);
+            order.setDateReady(LocalDateTime.now());
+            customerOrderRepository.save(order);
+            final Map<String, Object> params = buildEmailParams(order);
+            final Email email = buildEmail(order, params);
+            emailService.sendMail(email);
+        } else {
+            log.error("Order {} cannot be set as collected at this stage {}", order.getReference(), order.getStatus());
+        }
+    }
+
+    private void orderOutForDelivery(FoodOrder order) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.Ready)) {
+            order.setStatus(OrderStatus.Out_For_Delivery);
+            order.setDateReady(LocalDateTime.now());
+            customerOrderRepository.save(order);
+            final Map<String, Object> params = buildEmailParams(order);
+            final Email email = buildEmail(order, params);
+            emailService.sendMail(email);
+        } else {
+            log.error("Order {} cannot be set as out for delivery at this stage {}", order.getReference(), order.getStatus());
+        }
+    }
+
+    private void orderDelivered(FoodOrder order) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.Ready)) {
+            order.setStatus(OrderStatus.Delivered);
+            order.setDateReady(LocalDateTime.now());
+            customerOrderRepository.save(order);
+            final Map<String, Object> params = buildEmailParams(order);
+            final Email email = buildEmail(order, params);
+            emailService.sendMail(email);
+        } else {
+            log.error("Order {} cannot be set delivered at this stage {}", order.getReference(), order.getStatus());
+        }
     }
 
     public FoodOrder paymentIntent(FoodOrder order) {
