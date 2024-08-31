@@ -16,7 +16,11 @@ import java.util.List;
 public class FoodOrderValidator {
 
     public void validateOrder(FoodOrder order){
-        if (CollectionUtils.isEmpty(order.getItems())){
+
+        if (!order.isPartyOrder() && CollectionUtils.isEmpty(order.getItems())){
+            throw new ApiException(HttpStatus.BAD_REQUEST,"Items","Items cannot be empty");
+        }
+        if (order.isPartyOrder() && CollectionUtils.isEmpty(order.getPartyItems())){
             throw new ApiException(HttpStatus.BAD_REQUEST,"Items","Items cannot be empty");
         }
         validateItems(order.getItems());

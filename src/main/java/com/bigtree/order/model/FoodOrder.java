@@ -1,5 +1,7 @@
 package com.bigtree.order.model;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -13,6 +15,8 @@ import java.util.List;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Document(collection = "food-orders")
 public class FoodOrder {
 
@@ -31,12 +35,16 @@ public class FoodOrder {
     private ServiceMode serviceMode;
     private Customer customer;
     private CloudKitchen cloudKitchen;
+    private boolean partyOrder;
     private List<Item> items;
+    private List<PartyItem> partyItems;
     private BigDecimal subTotal;
     private BigDecimal total;
     private BigDecimal serviceFee;
     private BigDecimal deliveryFee;
     private BigDecimal packingFee;
+    private LocalDate partyDate;
+    private String partyTime;
     private LocalDate dateCreated;
     private LocalDate collectionDate;
     private LocalDate expectedDeliveryDate;
