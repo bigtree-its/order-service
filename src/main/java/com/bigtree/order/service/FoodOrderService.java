@@ -49,7 +49,7 @@ public class FoodOrderService {
             String salt2 = RandomStringUtils.random(2, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
             String salt3 = RandomStringUtils.random(2, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
             order.setReference(salt1 + "-" + salt2 + "-" + salt3);
-            order.setStatus(OrderStatus.New);
+            order.setStatus(OrderStatus.Unpaid);
             order.setDateCreated(LocalDate.now());
             order.setCreatedAt(LocalDateTime.now());
             foodOrder = customerOrderRepository.save(order);
@@ -206,9 +206,9 @@ public class FoodOrderService {
         switch (action) {
             case "Pickup" -> pickup(foodOrder);
             case "Cancel" -> {
-                if (foodOrder.getStatus().equalsIgnoreCase(OrderStatus.New)) {
+                if (foodOrder.getStatus().equalsIgnoreCase(OrderStatus.Unpaid)) {
                     deleteOrder(foodOrder);
-                } if (foodOrder.getStatus().equalsIgnoreCase(OrderStatus.Paid)) {
+                } if (foodOrder.getStatus().equalsIgnoreCase(OrderStatus.Open)) {
                     cancelOrder(foodOrder);
                 }
             }
@@ -334,7 +334,7 @@ public class FoodOrderService {
             if (paymentIntent != null) {
                 if (paymentIntent.getStatus().equalsIgnoreCase("Succeeded")) {
                     log.info("Order {} is Paid", order.getReference());
-                    order.setStatus(OrderStatus.Paid);
+                    order.setStatus(OrderStatus.Open);
                     order.setDatePaid(LocalDateTime.now());
                     customerOrderRepository.save(order);
                     final Map<String, Object> params = buildEmailParams(order);
@@ -350,7 +350,7 @@ public class FoodOrderService {
     }
 
     private void cancelOrder(FoodOrder order) {
-        if (order.getStatus().equalsIgnoreCase(OrderStatus.Paid)) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.Open)) {
             order.setStatus(OrderStatus.Cancelled);
             order.setDateCancelled(LocalDateTime.now());
             customerOrderRepository.save(order);
@@ -363,7 +363,7 @@ public class FoodOrderService {
     }
 
     private void declineOrder(FoodOrder order) {
-        if (order.getStatus().equalsIgnoreCase(OrderStatus.Paid)  || order.getStatus().equalsIgnoreCase(OrderStatus.New)) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.Open)  || order.getStatus().equalsIgnoreCase(OrderStatus.Unpaid)) {
             order.setStatus(OrderStatus.Declined);
             order.setDateRejected(LocalDateTime.now());
             customerOrderRepository.save(order);
@@ -376,7 +376,7 @@ public class FoodOrderService {
     }
 
     private void pickup(FoodOrder order) {
-        if (order.getStatus().equalsIgnoreCase(OrderStatus.Paid)) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.Open)) {
             order.setStatus(OrderStatus.In_Progress);
             order.setKitchenAction("Pickup");
             order.setDateAccepted(LocalDateTime.now());
@@ -466,7 +466,7 @@ public class FoodOrderService {
     }
 
     private void deleteOrder(FoodOrder order) {
-        if (order.getStatus().equalsIgnoreCase(OrderStatus.New) || order.getStatus().equalsIgnoreCase(OrderStatus.Cancelled)) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.Unpaid) || order.getStatus().equalsIgnoreCase(OrderStatus.Cancelled)) {
             customerOrderRepository.delete(order);
             log.info("Order {} has been deleted", order.getReference());
         } else {

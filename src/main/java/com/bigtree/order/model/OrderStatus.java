@@ -1,8 +1,8 @@
 package com.bigtree.order.model;
 
 public interface OrderStatus {
-    public static final String New ="New";
-    public static final String Paid ="Paid";
+    public static final String Unpaid ="Unpaid";
+    public static final String Open ="Open";
     public static final String In_Progress ="In Progress";
     public static final String Ready ="Ready";
     public static final String Out_For_Delivery ="Out for delivery";
