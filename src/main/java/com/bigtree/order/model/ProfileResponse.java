@@ -6,14 +6,17 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Builder
 @Data @AllArgsConstructor
 public class ProfileResponse {
 
-
+    @Builder.Default
+    private List<FoodOrder> all = new ArrayList<>();
     @Builder.Default
     private List<FoodOrder> today = new ArrayList<>();
     @Builder.Default
@@ -36,4 +39,5 @@ public class ProfileResponse {
     private BigDecimal lastMonthRevenue;
     private BigDecimal sixMonthsRevenue;
     private BigDecimal yearRevenue;
+    private Map<YearMonth, List<FoodOrder>> ordersByMonth;
 }

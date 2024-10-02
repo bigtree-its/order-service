@@ -1,6 +1,7 @@
 package com.bigtree.order.service;
 
 import com.bigtree.order.exception.ApiException;
+import com.bigtree.order.model.DummyOrder;
 import com.bigtree.order.model.FoodOrder;
 import com.bigtree.order.model.OrderStatus;
 import com.bigtree.order.model.ProfileResponse;
@@ -19,6 +20,8 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -38,13 +41,16 @@ public class ProfileService {
         }
         if (StringUtils.isNotEmpty(cloudKitchenId)) {
             query.addCriteria(Criteria.where("cloudKitchen._id").is(cloudKitchenId));
-
         }
         if (StringUtils.isNotEmpty(customer)) {
             query.addCriteria(Criteria.where("customer.email").is(customer));
 
         }
-        final LocalDate firstDayOfYear = Year.now().atMonth(1).atDay(1);
+        final LocalDate firstDayOfYear = LocalDate.now()
+                .withDayOfMonth(1)
+                .withMonth(1)
+                .minusYears(1);
+//        final LocalDate firstDayOfYear = Year.now().atMonth(1).atDay(1);
         if (date != null) {
             query.addCriteria(Criteria.where("dateCreated").gte(date));
         }
@@ -75,7 +81,10 @@ public class ProfileService {
         final LocalDate firstDayOfPrevMonth = YearMonth.now().minusMonths(1).atDay(1);
         final LocalDate sixMonths = YearMonth.now().minusMonths(6).atDay(1);
         final LocalDate firstDayOfYear = Year.now().atMonth(1).atDay(1);
-
+        Map<YearMonth, List<FoodOrder>> ordersByMonth = orders.stream()
+                .collect(Collectors.groupingBy(m -> YearMonth.from(m.getDateCreated()), Collectors.toList()));
+        response.setAll(orders);
+        response.setOrdersByMonth(ordersByMonth);
         for (FoodOrder order : orders) {
             if (order.getDateCreated().isEqual(today)) {
                 response.getToday().add((order));
