@@ -8,7 +8,7 @@ server:
   port: 8082
 
 auth:
-  permitAll: /kitchen-orders/v1/profile,/kitchen-orders/v1,/orders/v1/foods,/orders/v1/foods/action,orders/v1/foods/stripe-payments/payment-intent
+  permitAll: /kitchen-orders/v1/profile,/kitchen-orders/v1,/orders/v1/foods,/orders/v1/foods/action,orders/v1/foods/stripe-payments/payment-intent,/kitchen-orders/v1/sales-profile
 spring:
   data:
     mongodb:

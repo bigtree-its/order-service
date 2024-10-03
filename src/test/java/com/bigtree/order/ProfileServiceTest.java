@@ -1,9 +1,7 @@
 package com.bigtree.order;
 
 import com.bigtree.order.exception.ApiException;
-import com.bigtree.order.model.DummyOrder;
-import com.bigtree.order.model.ProfileRequest;
-import com.bigtree.order.model.ProfileResponse;
+import com.bigtree.order.model.*;
 import com.bigtree.order.service.ProfileService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -13,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @SpringBootTest
@@ -21,6 +18,13 @@ public class ProfileServiceTest {
 
     @Autowired
     ProfileService profileService;
+
+
+    @Test
+    public void buildSalesProfile(){
+        SalesProfile profile = profileService.getSalesProfile("669ea4a931126cc701dd5f99");
+        System.out.println(profile);
+    }
 
     @Test
     public void buildProfile(){

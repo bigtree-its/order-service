@@ -1,14 +1,14 @@
 package com.bigtree.order.service;
 
 import com.bigtree.order.exception.ApiException;
-import com.bigtree.order.model.DummyOrder;
-import com.bigtree.order.model.FoodOrder;
-import com.bigtree.order.model.OrderStatus;
-import com.bigtree.order.model.ProfileResponse;
+import com.bigtree.order.model.*;
+import com.bigtree.order.repository.SalesRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
@@ -17,11 +17,13 @@ import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Slf4j
 @Service
@@ -29,6 +31,66 @@ public class ProfileService {
 
     @Autowired
     MongoTemplate mongoTemplate;
+
+    @Autowired
+    private MongoOperations mongoOperations;
+
+    @Autowired
+    SalesRepository salesRepository;
+
+    public SalesProfile getSalesProfile(String cloudKitchenId){
+
+        SalesProfile salesProfile = SalesProfile.builder().build();
+        final LocalDate firstDayOfYear = LocalDate.now()
+                .withDayOfMonth(1)
+                .withMonth(1)
+                .minusYears(1);
+        MatchOperation matchOperation1 = match(new Criteria("cloudKitchen._id").is(cloudKitchenId));
+        MatchOperation matchOperation2 = match(new Criteria("dateCreated").gte(firstDayOfYear));
+        ProjectionOperation projectionOperation = project("reference", "total", "dateCreated", "status").and("cloudKitchen._id").as("cloudKitchenId");
+        TypedAggregation<FoodOrder> agg = newAggregation(FoodOrder.class, matchOperation1,matchOperation2, projectionOperation );
+        AggregationResults<OrderDTO> result = mongoTemplate.aggregate(agg, OrderDTO.class);
+        List<OrderDTO> documents = result.getMappedResults();
+
+        Map<Year, List<OrderDTO>> byYear = documents.stream()
+                .collect(Collectors.groupingBy(m -> Year.from(m.getDateCreated()), Collectors.toList()));
+
+
+        for (Map.Entry<Year, List<OrderDTO>> entry : byYear.entrySet()) {
+            YearProfile yearProfile = YearProfile.builder().build();
+            yearProfile.setYear(entry.getKey());
+            BigDecimal sum = entry.getValue().stream().map(OrderDTO::getTotal).reduce(BigDecimal.valueOf(0), BigDecimal::add);
+            yearProfile.setRevenue(sum);
+            yearProfile.setCount(entry.getValue().size());
+            yearProfile.setMonthlyProfiles(new ArrayList<>());
+            Map<Month, List<OrderDTO>> byMonth = entry.getValue().stream()
+                    .collect(Collectors.groupingBy(m -> Month.from(m.getDateCreated()), Collectors.toList()));
+            for (Map.Entry<Month, List<OrderDTO>> monthlyEntry : byMonth.entrySet()) {
+                MonthProfile monthProfile = MonthProfile.builder().build();
+                monthProfile.setMonth(monthlyEntry.getKey());
+                monthProfile.setOrders(entry.getValue());
+                BigDecimal monthlySum = monthlyEntry.getValue().stream().map(OrderDTO::getTotal).reduce(BigDecimal.valueOf(0), BigDecimal::add);
+                monthProfile.setRevenue(monthlySum);
+                monthProfile.setCount(monthlyEntry.getValue().size());
+                yearProfile.getMonthlyProfiles().add(monthProfile);
+            }
+
+            if (Objects.equals(yearProfile.getYear(), Year.now().minusYears(1))){
+                salesProfile.setPrevious(yearProfile);
+            }
+            if (Objects.equals(yearProfile.getYear(), Year.now())){
+                salesProfile.setCurrent(yearProfile);
+            }
+            if ( salesProfile.getPrevious() == null){
+                salesProfile.setPrevious(YearProfile.builder().year(Year.now().minusYears(1)).revenue(BigDecimal.ZERO).count(0).monthlyProfiles(new ArrayList<>()).build());
+            }
+            if ( salesProfile.getCurrent() == null){
+                salesProfile.setPrevious(YearProfile.builder().year(Year.now()).revenue(BigDecimal.ZERO).count(0).monthlyProfiles(new ArrayList<>()).build());
+            }
+        }
+        return salesProfile;
+
+    }
 
     public ProfileResponse getProfile(String customer, String cloudKitchenId, LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
         ProfileResponse response = ProfileResponse.builder().build();
@@ -67,6 +129,7 @@ public class ProfileService {
         }
         log.info("Searching orders with query {}", query);
         List<FoodOrder> orders = mongoTemplate.find(query, FoodOrder.class);
+        mongoTemplate.count(query, FoodOrder.class);
         if (!CollectionUtils.isEmpty(orders)) {
             response = buildProfile(orders);
         }

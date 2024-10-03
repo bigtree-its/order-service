@@ -2,6 +2,8 @@ package com.bigtree.order.controller;
 
 
 import com.bigtree.order.model.FoodOrder;
+import com.bigtree.order.model.SalesProfile;
+import com.bigtree.order.model.YearProfile;
 import com.bigtree.order.model.ProfileResponse;
 import com.bigtree.order.service.FoodOrderService;
 import com.bigtree.order.service.ProfileService;
@@ -11,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -39,6 +43,20 @@ public class KitchenOrderController {
         final ProfileResponse response = profileService.getProfile(customer, cloudKitchenId, date, dateFrom, dateTo);
         log.info("Returning profile response");
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/sales-profile")
+    public ResponseEntity<SalesProfile> getSalesProfile(
+            @RequestParam(value = "customer", required = false) String customer,
+            @RequestParam(value = "cloudKitchenId", required = true) String cloudKitchenId,
+            @RequestParam(value = "date", required = false) LocalDate date,
+            @RequestParam(value = "dateFrom", required = false) LocalDate dateFrom,
+            @RequestParam(value = "dateTo", required = false) LocalDate dateTo
+    ) {
+        log.info("Request to get sales profile for {}", cloudKitchenId);
+        final SalesProfile salesProfile = profileService.getSalesProfile( cloudKitchenId);
+        log.info("Returning sales profile ");
+        return ResponseEntity.ok(salesProfile);
     }
 
     @PutMapping("")
