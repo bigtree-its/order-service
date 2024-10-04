@@ -1,6 +1,7 @@
 package com.bigtree.order.service;
 
 import com.bigtree.order.exception.ApiException;
+import com.bigtree.order.helper.MonthUtils;
 import com.bigtree.order.model.*;
 import com.bigtree.order.repository.SalesRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -67,14 +68,20 @@ public class ProfileService {
                     .collect(Collectors.groupingBy(m -> Month.from(m.getDateCreated()), Collectors.toList()));
             for (Map.Entry<Month, List<OrderDTO>> monthlyEntry : byMonth.entrySet()) {
                 MonthProfile monthProfile = MonthProfile.builder().build();
-                monthProfile.setMonth(monthlyEntry.getKey());
+                monthProfile.setMonth(MonthUtils.getShortName(monthlyEntry.getKey()));
                 monthProfile.setOrders(entry.getValue());
                 BigDecimal monthlySum = monthlyEntry.getValue().stream().map(OrderDTO::getTotal).reduce(BigDecimal.valueOf(0), BigDecimal::add);
                 monthProfile.setRevenue(monthlySum);
                 monthProfile.setCount(monthlyEntry.getValue().size());
                 yearProfile.getMonthlyProfiles().add(monthProfile);
             }
-
+            List<MonthProfile> missing = new ArrayList<>();
+            Arrays.stream(MonthUtils.getMonths()).forEach(m-> {
+                if ( yearProfile.getMonthlyProfiles().stream().noneMatch(p-> p.getMonth().equalsIgnoreCase(m))){
+                    missing.add(MonthProfile.builder().month(m).count(0).revenue(BigDecimal.ZERO).orders(new ArrayList<>()).build());
+                }
+            });
+            yearProfile.getMonthlyProfiles().addAll(missing);
             if (Objects.equals(yearProfile.getYear(), Year.now().minusYears(1))){
                 salesProfile.setPrevious(yearProfile);
             }
@@ -86,6 +93,31 @@ public class ProfileService {
             }
             if ( salesProfile.getCurrent() == null){
                 salesProfile.setPrevious(YearProfile.builder().year(Year.now()).revenue(BigDecimal.ZERO).count(0).monthlyProfiles(new ArrayList<>()).build());
+            }
+        }
+        final LocalDate today = LocalDate.now();
+        final LocalDate sevenDaysBefore = today.minusDays(7);
+        final LocalDate firstDayOfCurrentMonth = YearMonth.now().atDay(1);
+        final LocalDate firstDayOfPrevMonth = YearMonth.now().minusMonths(1).atDay(1);
+        final LocalDate sixMonths = YearMonth.now().minusMonths(6).atDay(1);
+        for (OrderDTO order : documents) {
+            if (order.getDateCreated().isEqual(today)) {
+                salesProfile.getToday().add((order));
+                salesProfile.getSevenDays().add((order));
+                salesProfile.getMonth().add((order));
+                salesProfile.getSixMonth().add(order);
+            } else if (order.getDateCreated().isEqual(sevenDaysBefore) || order.getDateCreated().isAfter(sevenDaysBefore)) {
+                salesProfile.getSevenDays().add((order));
+                salesProfile.getMonth().add((order));
+                salesProfile.getSixMonth().add(order);
+            } else if (order.getDateCreated().isEqual(firstDayOfCurrentMonth) || order.getDateCreated().isAfter(firstDayOfCurrentMonth)) {
+                salesProfile.getMonth().add((order));
+                salesProfile.getSixMonth().add(order);
+            } else if (order.getDateCreated().isEqual(firstDayOfPrevMonth) || order.getDateCreated().isAfter(firstDayOfPrevMonth)) {
+                salesProfile.getLastMonth().add(order);
+                salesProfile.getSixMonth().add(order);
+            } else if (order.getDateCreated().isEqual(sixMonths) || order.getDateCreated().isAfter(sixMonths)) {
+                salesProfile.getSixMonth().add(order);
             }
         }
         return salesProfile;

@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 @Builder
 public class MonthProfile {
-    private Month month;
+    private String month;
     private BigDecimal revenue;
     private Integer count;
     private List<OrderDTO> orders;
