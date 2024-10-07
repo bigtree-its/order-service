@@ -5,7 +5,6 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.Year;
-import java.util.List;
 
 @Data
 @Builder
@@ -13,5 +12,16 @@ public class YearProfile {
     private Year year;
     private BigDecimal revenue;
     private Integer count;
-    private List<MonthProfile> monthlyProfiles;
+    private MonthProfile jan;
+    private MonthProfile feb;
+    private MonthProfile mar;
+    private MonthProfile apr;
+    private MonthProfile may;
+    private MonthProfile jun;
+    private MonthProfile jul;
+    private MonthProfile aug;
+    private MonthProfile sep;
+    private MonthProfile oct;
+    private MonthProfile nov;
+    private MonthProfile dec;
 }
