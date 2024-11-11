@@ -9,6 +9,7 @@ public class CloudKitchen {
 
     private String _id;
     private String name;
+    private String slug;
     private String image;
     private String mobile;
     private String email;
