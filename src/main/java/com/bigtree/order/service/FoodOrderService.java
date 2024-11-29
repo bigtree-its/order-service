@@ -271,7 +271,7 @@ public class FoodOrderService {
     }
 
     private void orderDelivered(FoodOrder order) {
-        if (order.getStatus().equalsIgnoreCase(OrderStatus.Ready)) {
+        if (order.getStatus().equalsIgnoreCase(OrderStatus.Ready) || order.getStatus().equalsIgnoreCase(OrderStatus.Out_For_Delivery)) {
             order.setStatus(OrderStatus.Delivered);
             order.setDateReady(LocalDateTime.now());
             customerOrderRepository.save(order);
