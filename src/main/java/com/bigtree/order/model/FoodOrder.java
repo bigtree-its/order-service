@@ -45,19 +45,20 @@ public class FoodOrder {
     private BigDecimal packingFee;
     private LocalDate partyDate;
     private String partyTime;
-    private LocalDate dateCreated;
     private LocalDate collectionDate;
     private LocalDate expectedDeliveryDate;
+    private LocalDateTime dateCreated;
     private LocalDateTime dateAccepted;
     private LocalDateTime dateDelivered;
-    private LocalDateTime dateSubmitted;
     private LocalDateTime dateCancelled;
     private LocalDateTime dateCollected;
-    private LocalDateTime dateRejected;
+    private LocalDateTime dateDeclined;
     private LocalDateTime dateReady;
+    private LocalDateTime dateTransit;
     private LocalDateTime dateRefunded;
     private LocalDateTime dateRefundStarted;
     private LocalDateTime datePaid;
+    private LocalDateTime dateInvoiced;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

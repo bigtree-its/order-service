@@ -18,6 +18,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
@@ -170,12 +171,12 @@ public class ProfileService {
 
     private ProfileResponse buildProfile(List<FoodOrder> orders) {
         ProfileResponse response = ProfileResponse.builder().build();
-        final LocalDate today = LocalDate.now();
-        final LocalDate sevenDaysBefore = today.minusDays(7);
-        final LocalDate firstDayOfCurrentMonth = YearMonth.now().atDay(1);
-        final LocalDate firstDayOfPrevMonth = YearMonth.now().minusMonths(1).atDay(1);
-        final LocalDate sixMonths = YearMonth.now().minusMonths(6).atDay(1);
-        final LocalDate firstDayOfYear = Year.now().atMonth(1).atDay(1);
+        final LocalDateTime today = LocalDateTime.now();
+        final LocalDateTime sevenDaysBefore = today.minusDays(7);
+        final LocalDateTime firstDayOfCurrentMonth = YearMonth.now().atDay(1).atStartOfDay();
+        final LocalDateTime firstDayOfPrevMonth = YearMonth.now().minusMonths(1).atDay(1).atStartOfDay();
+        final LocalDateTime sixMonths = YearMonth.now().minusMonths(6).atDay(1).atStartOfDay();
+        final LocalDateTime firstDayOfYear = Year.now().atMonth(1).atDay(1).atStartOfDay();
         Map<YearMonth, List<FoodOrder>> ordersByMonth = orders.stream()
                 .collect(Collectors.groupingBy(m -> YearMonth.from(m.getDateCreated()), Collectors.toList()));
         response.setAll(orders);

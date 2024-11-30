@@ -50,7 +50,7 @@ public class FoodOrderService {
             String salt3 = RandomStringUtils.random(2, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
             order.setReference(salt1 + "-" + salt2 + "-" + salt3);
             order.setStatus(OrderStatus.Unpaid);
-            order.setDateCreated(LocalDate.now());
+            order.setDateCreated(LocalDateTime.now());
             order.setCreatedAt(LocalDateTime.now());
             foodOrder = customerOrderRepository.save(order);
             log.info("Created new order: {}, Ref: {}", foodOrder.get_id(), foodOrder.getReference());
@@ -247,7 +247,7 @@ public class FoodOrderService {
     private void orderCollected(FoodOrder order) {
         if (order.getStatus().equalsIgnoreCase(OrderStatus.Ready)) {
             order.setStatus(OrderStatus.Collected);
-            order.setDateReady(LocalDateTime.now());
+            order.setDateCollected(LocalDateTime.now());
             customerOrderRepository.save(order);
             final Map<String, Object> params = buildEmailParams(order);
             final Email email = buildEmail(order, params);
@@ -260,7 +260,7 @@ public class FoodOrderService {
     private void orderOutForDelivery(FoodOrder order) {
         if (order.getStatus().equalsIgnoreCase(OrderStatus.Ready)) {
             order.setStatus(OrderStatus.Out_For_Delivery);
-            order.setDateReady(LocalDateTime.now());
+            order.setDateTransit(LocalDateTime.now());
             customerOrderRepository.save(order);
             final Map<String, Object> params = buildEmailParams(order);
             final Email email = buildEmail(order, params);
@@ -273,7 +273,7 @@ public class FoodOrderService {
     private void orderDelivered(FoodOrder order) {
         if (order.getStatus().equalsIgnoreCase(OrderStatus.Ready) || order.getStatus().equalsIgnoreCase(OrderStatus.Out_For_Delivery)) {
             order.setStatus(OrderStatus.Delivered);
-            order.setDateReady(LocalDateTime.now());
+            order.setDateDelivered(LocalDateTime.now());
             customerOrderRepository.save(order);
             final Map<String, Object> params = buildEmailParams(order);
             final Email email = buildEmail(order, params);
@@ -365,7 +365,7 @@ public class FoodOrderService {
     private void declineOrder(FoodOrder order) {
         if (order.getStatus().equalsIgnoreCase(OrderStatus.Open)  || order.getStatus().equalsIgnoreCase(OrderStatus.Unpaid)) {
             order.setStatus(OrderStatus.Declined);
-            order.setDateRejected(LocalDateTime.now());
+            order.setDateDeclined(LocalDateTime.now());
             customerOrderRepository.save(order);
             final Map<String, Object> params = buildEmailParams(order);
             final Email email = buildEmail(order, params);
