@@ -50,10 +50,11 @@ public class FoodOrderService {
             String salt3 = RandomStringUtils.random(2, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
             order.setReference(salt1 + "-" + salt2 + "-" + salt3);
             order.setStatus(OrderStatus.Unpaid);
+            order.setOrderDate(LocalDate.now());
             order.setDateCreated(LocalDateTime.now());
             order.setCreatedAt(LocalDateTime.now());
             foodOrder = customerOrderRepository.save(order);
-            log.info("Created new order: {}, Ref: {}", foodOrder.get_id(), foodOrder.getReference());
+            log.info("Created a new order: {} with Ref: {} on {}", foodOrder.get_id(), foodOrder.getReference(), foodOrder.getOrderDate());
             if (StringUtils.isNotEmpty(action)) {
                 foodOrder = action(foodOrder.getReference(), action);
             }
@@ -83,7 +84,7 @@ public class FoodOrderService {
         loaded.setServiceMode(order.getServiceMode());
         loaded.setTotal(order.getTotal());
         FoodOrder updated = customerOrderRepository.save(loaded);
-        log.info("Updated order: {}", updated.getReference());
+        log.info("Updated an order: {}", updated.getReference());
         if (StringUtils.isNotEmpty(action)) {
             action(updated.getReference(), action);
         }
@@ -119,14 +120,14 @@ public class FoodOrderService {
             query.addCriteria(Criteria.where("cloudKitchen._id").is(cloudKitchenId));
         }
         if (date != null) {
-            query.addCriteria(Criteria.where("dateCreated").is(date));
+            query.addCriteria(Criteria.where("orderDate").is(date));
         } else {
             if (dateFrom != null && dateTo != null) {
-                query.addCriteria(Criteria.where("dateCreated").gte(dateFrom).lte(dateTo));
+                query.addCriteria(Criteria.where("orderDate").gte(dateFrom).lte(dateTo));
             } else if (dateTo != null) {
-                query.addCriteria(Criteria.where("dateCreated").lte(dateTo));
+                query.addCriteria(Criteria.where("orderDate").lte(dateTo));
             } else if (dateFrom != null) {
-                query.addCriteria(Criteria.where("dateCreated").gte(dateFrom));
+                query.addCriteria(Criteria.where("orderDate").gte(dateFrom));
             }
         }
 

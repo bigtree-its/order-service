@@ -18,7 +18,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
@@ -40,7 +39,7 @@ public class ProfileService {
     @Autowired
     SalesRepository salesRepository;
 
-    public SalesProfile getSalesProfile(String cloudKitchenId){
+    public SalesProfile getSalesProfile(String cloudKitchenId) {
 
         SalesProfile salesProfile = SalesProfile.builder().build();
         final LocalDate firstDayOfYear = LocalDate.now()
@@ -48,20 +47,22 @@ public class ProfileService {
                 .withMonth(1)
                 .minusYears(1);
         MatchOperation matchOperation1 = match(new Criteria("cloudKitchen._id").is(cloudKitchenId));
-        MatchOperation matchOperation2 = match(new Criteria("dateCreated").gte(firstDayOfYear));
-        ProjectionOperation projectionOperation = project("reference", "total", "dateCreated", "status").and("cloudKitchen._id").as("cloudKitchenId");
-        TypedAggregation<FoodOrder> agg = newAggregation(FoodOrder.class, matchOperation1,matchOperation2, projectionOperation );
+        MatchOperation matchOperation2 = match(new Criteria("orderDate").gte(firstDayOfYear));
+        ProjectionOperation projectionOperation = project("reference", "total", "orderDate", "dateCreated", "status")
+                .and("cloudKitchen._id").as("cloudKitchenId");
+        TypedAggregation<FoodOrder> agg = newAggregation(FoodOrder.class, matchOperation1, matchOperation2,
+                projectionOperation);
         AggregationResults<OrderDTO> result = mongoTemplate.aggregate(agg, OrderDTO.class);
         List<OrderDTO> documents = result.getMappedResults();
 
         Map<Year, List<OrderDTO>> byYear = documents.stream()
-                .collect(Collectors.groupingBy(m -> Year.from(m.getDateCreated()), Collectors.toList()));
-
+                .collect(Collectors.groupingBy(m -> Year.from(m.getOrderDate()), Collectors.toList()));
 
         for (Map.Entry<Year, List<OrderDTO>> entry : byYear.entrySet()) {
             YearProfile yearProfile = YearProfile.builder().build();
             yearProfile.setYear(entry.getKey());
-            BigDecimal sum = entry.getValue().stream().map(OrderDTO::getTotal).reduce(BigDecimal.valueOf(0), BigDecimal::add);
+            BigDecimal sum = entry.getValue().stream().map(OrderDTO::getTotal).reduce(BigDecimal.valueOf(0),
+                    BigDecimal::add);
             yearProfile.setRevenue(sum);
             yearProfile.setCount(entry.getValue().size());
             yearProfile.setMonthlyProfiles(new ArrayList<>());
@@ -71,29 +72,33 @@ public class ProfileService {
                 MonthProfile monthProfile = MonthProfile.builder().build();
                 monthProfile.setMonth(MonthUtils.getShortName(monthlyEntry.getKey()));
                 monthProfile.setOrders(entry.getValue());
-                BigDecimal monthlySum = monthlyEntry.getValue().stream().map(OrderDTO::getTotal).reduce(BigDecimal.valueOf(0), BigDecimal::add);
+                BigDecimal monthlySum = monthlyEntry.getValue().stream().map(OrderDTO::getTotal)
+                        .reduce(BigDecimal.valueOf(0), BigDecimal::add);
                 monthProfile.setRevenue(monthlySum);
                 monthProfile.setCount(monthlyEntry.getValue().size());
                 yearProfile.getMonthlyProfiles().add(monthProfile);
             }
             List<MonthProfile> missing = new ArrayList<>();
-            Arrays.stream(MonthUtils.getMonths()).forEach(m-> {
-                if ( yearProfile.getMonthlyProfiles().stream().noneMatch(p-> p.getMonth().equalsIgnoreCase(m))){
-                    missing.add(MonthProfile.builder().month(m).count(0).revenue(BigDecimal.ZERO).orders(new ArrayList<>()).build());
+            Arrays.stream(MonthUtils.getMonths()).forEach(m -> {
+                if (yearProfile.getMonthlyProfiles().stream().noneMatch(p -> p.getMonth().equalsIgnoreCase(m))) {
+                    missing.add(MonthProfile.builder().month(m).count(0).revenue(BigDecimal.ZERO)
+                            .orders(new ArrayList<>()).build());
                 }
             });
             yearProfile.getMonthlyProfiles().addAll(missing);
-            if (Objects.equals(yearProfile.getYear(), Year.now().minusYears(1))){
+            if (Objects.equals(yearProfile.getYear(), Year.now().minusYears(1))) {
                 salesProfile.setPrevious(yearProfile);
             }
-            if (Objects.equals(yearProfile.getYear(), Year.now())){
+            if (Objects.equals(yearProfile.getYear(), Year.now())) {
                 salesProfile.setCurrent(yearProfile);
             }
-            if ( salesProfile.getPrevious() == null){
-                salesProfile.setPrevious(YearProfile.builder().year(Year.now().minusYears(1)).revenue(BigDecimal.ZERO).count(0).monthlyProfiles(new ArrayList<>()).build());
+            if (salesProfile.getPrevious() == null) {
+                salesProfile.setPrevious(YearProfile.builder().year(Year.now().minusYears(1)).revenue(BigDecimal.ZERO)
+                        .count(0).monthlyProfiles(new ArrayList<>()).build());
             }
-            if ( salesProfile.getCurrent() == null){
-                salesProfile.setPrevious(YearProfile.builder().year(Year.now()).revenue(BigDecimal.ZERO).count(0).monthlyProfiles(new ArrayList<>()).build());
+            if (salesProfile.getCurrent() == null) {
+                salesProfile.setPrevious(YearProfile.builder().year(Year.now()).revenue(BigDecimal.ZERO).count(0)
+                        .monthlyProfiles(new ArrayList<>()).build());
             }
         }
         final LocalDate today = LocalDate.now();
@@ -102,22 +107,25 @@ public class ProfileService {
         final LocalDate firstDayOfPrevMonth = YearMonth.now().minusMonths(1).atDay(1);
         final LocalDate sixMonths = YearMonth.now().minusMonths(6).atDay(1);
         for (OrderDTO order : documents) {
-            if (order.getDateCreated().isEqual(today)) {
+            if (order.getOrderDate().isEqual(today)) {
                 salesProfile.getToday().add((order));
                 salesProfile.getSevenDays().add((order));
                 salesProfile.getMonth().add((order));
                 salesProfile.getSixMonth().add(order);
-            } else if (order.getDateCreated().isEqual(sevenDaysBefore) || order.getDateCreated().isAfter(sevenDaysBefore)) {
+            } else if (order.getOrderDate().isEqual(sevenDaysBefore)
+                    || order.getOrderDate().isAfter(sevenDaysBefore)) {
                 salesProfile.getSevenDays().add((order));
                 salesProfile.getMonth().add((order));
                 salesProfile.getSixMonth().add(order);
-            } else if (order.getDateCreated().isEqual(firstDayOfCurrentMonth) || order.getDateCreated().isAfter(firstDayOfCurrentMonth)) {
+            } else if (order.getOrderDate().isEqual(firstDayOfCurrentMonth)
+                    || order.getOrderDate().isAfter(firstDayOfCurrentMonth)) {
                 salesProfile.getMonth().add((order));
                 salesProfile.getSixMonth().add(order);
-            } else if (order.getDateCreated().isEqual(firstDayOfPrevMonth) || order.getDateCreated().isAfter(firstDayOfPrevMonth)) {
+            } else if (order.getOrderDate().isEqual(firstDayOfPrevMonth)
+                    || order.getOrderDate().isAfter(firstDayOfPrevMonth)) {
                 salesProfile.getLastMonth().add(order);
                 salesProfile.getSixMonth().add(order);
-            } else if (order.getDateCreated().isEqual(sixMonths) || order.getDateCreated().isAfter(sixMonths)) {
+            } else if (order.getOrderDate().isEqual(sixMonths) || order.getOrderDate().isAfter(sixMonths)) {
                 salesProfile.getSixMonth().add(order);
             }
         }
@@ -125,14 +133,16 @@ public class ProfileService {
 
     }
 
-    public ProfileResponse getProfile(String customer, String cloudKitchenId, LocalDate date, LocalDate dateFrom, LocalDate dateTo) {
+    public ProfileResponse getProfile(String customer, String cloudKitchenId, LocalDate date, LocalDate dateFrom,
+            LocalDate dateTo) {
         ProfileResponse response = ProfileResponse.builder().build();
         log.info("Processing profile request...");
         Query query = new Query();
 
         if (StringUtils.isEmpty(customer) && StringUtils.isEmpty(cloudKitchenId)) {
             log.error("CloudKitchen Id or Customer email is mandatory");
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request", "CloudKitchen Id or Customer email is mandatory");
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Bad Request",
+                    "CloudKitchen Id or Customer email is mandatory");
         }
         if (StringUtils.isNotEmpty(cloudKitchenId)) {
             query.addCriteria(Criteria.where("cloudKitchen._id").is(cloudKitchenId));
@@ -145,20 +155,20 @@ public class ProfileService {
                 .withDayOfMonth(1)
                 .withMonth(1)
                 .minusYears(1);
-//        final LocalDate firstDayOfYear = Year.now().atMonth(1).atDay(1);
+        // final LocalDate firstDayOfYear = Year.now().atMonth(1).atDay(1);
         if (date != null) {
-            query.addCriteria(Criteria.where("dateCreated").gte(date));
+            query.addCriteria(Criteria.where("orderDate").gte(date));
         }
         if (dateFrom == null && dateTo == null) {
-            query.addCriteria(Criteria.where("dateCreated").gte(firstDayOfYear));
+            query.addCriteria(Criteria.where("orderDate").gte(firstDayOfYear));
         } else if (dateFrom != null) {
             if (dateTo != null) {
-                query.addCriteria(Criteria.where("dateCreated").gte(dateFrom).lte(dateTo));
+                query.addCriteria(Criteria.where("orderDate").gte(dateFrom).lte(dateTo));
             } else {
-                query.addCriteria(Criteria.where("dateCreated").gte(dateFrom));
+                query.addCriteria(Criteria.where("orderDate").gte(dateFrom));
             }
         } else {
-            query.addCriteria(Criteria.where("dateCreated").lte(dateTo));
+            query.addCriteria(Criteria.where("orderDate").lte(dateTo));
         }
         log.info("Searching orders with query {}", query);
         List<FoodOrder> orders = mongoTemplate.find(query, FoodOrder.class);
@@ -170,41 +180,46 @@ public class ProfileService {
     }
 
     private ProfileResponse buildProfile(List<FoodOrder> orders) {
+        log.info("Building sales order profile with {} orders", orders.size());
         ProfileResponse response = ProfileResponse.builder().build();
-        final LocalDateTime today = LocalDateTime.now();
-        final LocalDateTime sevenDaysBefore = today.minusDays(7);
-        final LocalDateTime firstDayOfCurrentMonth = YearMonth.now().atDay(1).atStartOfDay();
-        final LocalDateTime firstDayOfPrevMonth = YearMonth.now().minusMonths(1).atDay(1).atStartOfDay();
-        final LocalDateTime sixMonths = YearMonth.now().minusMonths(6).atDay(1).atStartOfDay();
-        final LocalDateTime firstDayOfYear = Year.now().atMonth(1).atDay(1).atStartOfDay();
+        final LocalDate today = LocalDate.now();
+        final LocalDate sevenDaysBefore = today.minusDays(7);
+        final LocalDate firstDayOfCurrentMonth = YearMonth.now().atDay(1);
+        final LocalDate firstDayOfPrevMonth = YearMonth.now().minusMonths(1).atDay(1);
+        final LocalDate sixMonths = YearMonth.now().minusMonths(6).atDay(1);
+        final LocalDate firstDayOfYear = Year.now().atMonth(1).atDay(1);
         Map<YearMonth, List<FoodOrder>> ordersByMonth = orders.stream()
                 .collect(Collectors.groupingBy(m -> YearMonth.from(m.getDateCreated()), Collectors.toList()));
         response.setAll(orders);
         response.setOrdersByMonth(ordersByMonth);
         for (FoodOrder order : orders) {
-            if (order.getDateCreated().isEqual(today)) {
+            if (order.getOrderDate().isEqual(today)) {
                 response.getToday().add((order));
                 response.getSevenDays().add((order));
                 response.getMonth().add((order));
                 response.getSixMonth().add(order);
                 response.getYear().add(order);
-            } else if (order.getDateCreated().isEqual(sevenDaysBefore) || order.getDateCreated().isAfter(sevenDaysBefore)) {
+            } else if (order.getOrderDate().isEqual(sevenDaysBefore)
+                    || order.getOrderDate().isAfter(sevenDaysBefore)) {
                 response.getSevenDays().add((order));
                 response.getMonth().add((order));
                 response.getSixMonth().add(order);
                 response.getYear().add(order);
-            } else if (order.getDateCreated().isEqual(firstDayOfCurrentMonth) || order.getDateCreated().isAfter(firstDayOfCurrentMonth)) {
+            } else if (order.getOrderDate().isEqual(firstDayOfCurrentMonth)
+                    || order.getOrderDate().isAfter(firstDayOfCurrentMonth)) {
                 response.getMonth().add((order));
                 response.getSixMonth().add(order);
                 response.getYear().add(order);
-            } else if (order.getDateCreated().isEqual(firstDayOfPrevMonth) || order.getDateCreated().isAfter(firstDayOfPrevMonth)) {
+            } else if (order.getOrderDate().isEqual(firstDayOfPrevMonth)
+                    || order.getOrderDate().isAfter(firstDayOfPrevMonth)) {
                 response.getLastMonth().add(order);
                 response.getSixMonth().add(order);
                 response.getYear().add(order);
-            } else if (order.getDateCreated().isEqual(sixMonths) || order.getDateCreated().isAfter(sixMonths)) {
+            } else if (order.getOrderDate().isEqual(sixMonths) || order.getOrderDate().isAfter(sixMonths)) {
                 response.getSixMonth().add(order);
                 response.getYear().add(order);
-            } else if (order.getDateCreated().isEqual(firstDayOfYear) || order.getDateCreated().isAfter(firstDayOfYear)) {
+            } else if (order.getOrderDate().isEqual(firstDayOfYear)
+                    || order.getOrderDate().isAfter(firstDayOfYear)) {
                 response.getYear().add(order);
             } else {
                 response.getDateRange().add((order));

@@ -3,7 +3,6 @@ package com.bigtree.order.controller;
 
 import com.bigtree.order.model.FoodOrder;
 import com.bigtree.order.model.SalesProfile;
-import com.bigtree.order.model.YearProfile;
 import com.bigtree.order.model.ProfileResponse;
 import com.bigtree.order.service.FoodOrderService;
 import com.bigtree.order.service.ProfileService;
@@ -13,8 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.Map;
 
 @Slf4j
 @RestController

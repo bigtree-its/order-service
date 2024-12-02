@@ -45,6 +45,7 @@ public class FoodOrder {
     private BigDecimal packingFee;
     private LocalDate partyDate;
     private String partyTime;
+    private LocalDate orderDate;
     private LocalDate collectionDate;
     private LocalDate expectedDeliveryDate;
     private LocalDateTime dateCreated;
