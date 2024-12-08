@@ -1,8 +1,7 @@
 package com.bigtree.order.model;
 
-public interface OrderStatus {
-    public static final String Unpaid ="Unpaid";
-    public static final String Open ="Open";
+public interface Action {
+    public static final String Acknowledge ="Acknowledge";
     public static final String In_Progress ="In Progress";
     public static final String Ready ="Ready";
     public static final String Out_For_Delivery ="Out for delivery";
@@ -13,8 +12,5 @@ public interface OrderStatus {
     public static final String Declined ="Declined";
     public static final String Cancelled ="Cancelled";
     public static final String Invoiced ="Invoiced";
-    public static final String Invoice_Accepted ="Invoice Accepted";
-    public static final String Completed ="Completed";
     public static final String Payment_Error ="Payment Error";
-
 }

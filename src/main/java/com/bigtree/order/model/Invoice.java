@@ -8,33 +8,28 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Map;
 
-@Document(collection = "payments")
+@Document(collection = "invoices")
 @Data
 @Builder
-public class Payment {
+public class Invoice {
 
     @Id
     private String id;
-    private String intentId;
-    private String object;
-    private BigDecimal amount;
-    private String customer;
-    private String orderReference;
-    private String clientSecret;
-    private String currency;
-    private String error;
-    private boolean liveMode;
-    private String errorMessage;
-    private String paymentMethod;
+    private String cloudKitchenId;
+    private LocalDate date;
+    private LocalDate dateAccepted;
+    private LocalDate dateCompleted;
     private String status;
-    private String supplier;
-    private String chargesUrl;
-    private Map<String,String> metaData;
+    private String orderReference;
+    private BigDecimal orderAmount;
+    private BigDecimal invoiceAmount;
     @CreatedDate
     private LocalDateTime createdAt;
     @LastModifiedDate
     private LocalDateTime updatedAt;
+    private LocalDateTime acceptedAt;
+    private LocalDateTime completedAt;
 }

@@ -2,7 +2,9 @@ package com.bigtree.order.model;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Builder;
@@ -60,7 +62,11 @@ public class FoodOrder {
     private LocalDateTime dateRefundStarted;
     private LocalDateTime datePaid;
     private LocalDateTime dateInvoiced;
+    private LocalDateTime dateInvoiceAccepted;
+    private LocalDateTime dateCompleted;
+    @CreatedDate
     private LocalDateTime createdAt;
+    @LastModifiedDate
     private LocalDateTime updatedAt;
 
 }

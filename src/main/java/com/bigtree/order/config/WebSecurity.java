@@ -41,10 +41,15 @@ public class WebSecurity {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         log.info("SecurityFilterChain....");
         http.cors(Customizer.withDefaults())
-                .authorizeHttpRequests(req -> req.anyRequest().authenticated())
+//                .authorizeHttpRequests(req -> req.anyRequest().permitAll())
+                .authorizeHttpRequests(authorized -> {
+//                    authorized.requestMatchers("/*/**").authenticated(); // Secure /invoices/** URLs
+//                    authorized.anyRequest().authenticated(); // Allow all other requests
+                    authorized.anyRequest().permitAll(); // Allow all other requests
+                })
                 .httpBasic(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable);
-        http.addFilterAfter(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+//        http.addFilterAfter(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
 
     }
