@@ -76,7 +76,7 @@ public class InvoiceService {
                             .build();
 
                     Invoice created = invoiceRepository.save(newInvoice);
-                    log.info("Invoice {} created for order {} with amount {}", created.getId(), request.getOrderReference(), newInvoice.getInvoiceAmount());
+                    log.info("Invoice {} created for order {} with amount {}", created.get_id(), request.getOrderReference(), newInvoice.getInvoiceAmount());
                     foodOrder.setStatus(OrderStatus.Invoiced);
                     foodOrder.setDateInvoiced(LocalDateTime.now());
                     orderRepository.save(foodOrder);
@@ -182,6 +182,8 @@ public class InvoiceService {
             FoodOrder foodOrder = orderRepository.findByReference(ops.get().getOrderReference());
             if ( foodOrder != null){
                 foodOrder.setDateInvoiced(null);
+                foodOrder.setDateInvoiceAccepted(null);
+                foodOrder.setDateCompleted(null);
                 if(foodOrder.getServiceMode() == ServiceMode.COLLECTION){
                     foodOrder.setStatus(OrderStatus.Collected);
                 }

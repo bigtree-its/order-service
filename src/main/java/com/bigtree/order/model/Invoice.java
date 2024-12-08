@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class Invoice {
 
     @Id
-    private String id;
+    private String _id;
     private String cloudKitchenId;
     private LocalDate date;
     private LocalDate dateAccepted;
