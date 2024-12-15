@@ -33,13 +33,14 @@ public class EmailService {
             helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
             helper.setTo(email.getTo());
             helper.setSubject(email.getSubject());
+            helper.setFrom("orders@dishome.co.uk");
             helper.setText(emailContentHelper.build("order", email.getParams()), true);
             javaMailSender.send(mimeMessage);
             log.info("Email sent to customer {}", email.getTo());
         } catch (MessagingException e) {
             log.info("Exception while sending payment link email to {}", email.getTo());
         } catch (Exception e){
-            log.error("Error while sending email to {}", email.getTo());
+            log.error("Error while sending email to {}", email.getTo(), e);
         }
     }
 }

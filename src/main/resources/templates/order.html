@@ -53,11 +53,11 @@
         }
 
         .banner {
-            height: 50px;
-            line-height: 50px;
-            color: #ffb524;
-            font-weight: 900;
-            font-family: "Bebas Neue", sans-serif;
+            height: 100px;
+            color: #FFE01B;
+            padding: 10px;
+            width: 600px;
+            margin: auto;
         }
         .order-header{
             padding: 10px 0;
@@ -150,7 +150,7 @@
 <body style="margin: 0 !important; padding: 0 !important;" >
     <div class="main-body">
         <div style="margin:30px 0;color: #ffb524;font-weight: 900;">
-            <h1>EATem</h1>
+            <h1>zamosa</h1>
         </div>
         <div class="order-header">
             <span>Your Order #<span th:utext="${order.reference}"/></span>
@@ -300,7 +300,7 @@
             <span style="font-weight: 800;margin-right: 10px; display: block;" >Collection Date </span>: <span
                 th:utext="${#temporals.format(order.collectionDate, 'dd MMM yyyy')}"></span>
         </div>
-        <div style="background: #f9f9f;padding:5px 10px;margin:10px 0;border-radius:6px" th:if="${serviceMode == 'COLLECTION'}">
+        <div style="background: #f9f9f9;padding:5px 10px;margin:10px 0;border-radius:6px" th:if="${serviceMode == 'COLLECTION'}">
             <p style="font-weight: 800; ">Collect At</p>
             <p>
             <div th:if="${cloudKitchen.address.addressLine1} != null">
@@ -340,11 +340,11 @@
         <div style="padding:5p 0x;margin:5px 0;">
             <span>We hope to welcome you back to www.eatem.co.uk soon!</span>
             <span>Best Regards,</span>
-            <span>The Team</span>
+            <span>ZAMOSA</span>
         </div>
         <div style="padding:10px;margin:5px 0;background-color: #f3f3f3;">
             <p>
-                ©2023-2024 EATem Ltd. Registered in Scotland. #SC595168. VAT No #295285756
+                ©2023-2024 zamosa Ltd. Registered in Scotland. #SC595168. VAT No #295285756
             </p>
         </div>
     </div>

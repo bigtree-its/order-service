@@ -392,6 +392,7 @@ public class FoodOrderService {
     }
 
     private Email buildEmail(FoodOrder order, Map<String, Object> params) {
+        log.info("Sending email to {}", order.getCustomer().getEmail());
         final Email email = Email.builder()
                 .to(order.getCustomer().getEmail())
                 .subject("Your order " + order.getReference())
