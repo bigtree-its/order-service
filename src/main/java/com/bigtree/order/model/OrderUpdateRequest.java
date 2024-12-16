@@ -3,7 +3,7 @@ package com.bigtree.order.model;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -18,7 +18,6 @@ public class OrderUpdateRequest {
     private List<Note> customerNotes;
     private List<Note>  kitchenNotes;
     String customerComments;
-    LocalDate expectedCollectionDate;
-    LocalDate expectedDeliveryDate;
+    private LocalDateTime scheduledDate;
     Integer customerRating;
 }

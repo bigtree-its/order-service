@@ -37,6 +37,7 @@ public class FoodOrder {
     private ServiceMode serviceMode;
     private Customer customer;
     private CloudKitchen cloudKitchen;
+    private boolean preOrder;
     private boolean partyOrder;
     private List<Item> items;
     private List<PartyItem> partyItems;
@@ -48,7 +49,7 @@ public class FoodOrder {
     private LocalDate partyDate;
     private String partyTime;
     private LocalDate orderDate;
-    private LocalDate collectionDate;
+    private LocalDateTime scheduledDate;
     private LocalDate expectedDeliveryDate;
     private LocalDateTime dateCreated;
     private LocalDateTime dateAccepted;

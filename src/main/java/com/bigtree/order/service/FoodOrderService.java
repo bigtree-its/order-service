@@ -178,11 +178,8 @@ public class FoodOrderService {
         if (request.getCustomerRating() != null) {
             order.setCustomerRating(request.getCustomerRating());
         }
-        if (request.getExpectedCollectionDate() != null) {
-            order.setCollectionDate(request.getExpectedCollectionDate());
-        }
-        if (request.getExpectedDeliveryDate() != null) {
-            order.setExpectedDeliveryDate(request.getExpectedDeliveryDate());
+        if (request.getScheduledDate() != null) {
+            order.setScheduledDate(request.getScheduledDate());
         }
         if (request.getStatus() != null) {
             order.setStatus(request.getStatus());
@@ -408,7 +405,12 @@ public class FoodOrderService {
         params.put("status", order.getStatus());
         params.put("serviceMode", order.getServiceMode().name());
         params.put("customer", order.getCustomer());
-        params.put("items", order.getItems());
+        if (! CollectionUtils.isEmpty(order.getItems())){
+            params.put("items", order.getItems());
+        }
+        if (! CollectionUtils.isEmpty(order.getPartyItems())){
+            params.put("partyItems", order.getPartyItems());
+        }
         params.put("cloudKitchen", order.getCloudKitchen());
         return params;
     }
