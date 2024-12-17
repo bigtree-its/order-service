@@ -17,8 +17,8 @@ spring:
   mail:
     default-encoding: UTF-8
     host: smtp.gmail.com
-    username: contact.dishome@gmail.com
-    password: dsuphdeopyvgdscr
+    username: contact.eatem@gmail.com
+    password: jcojdfaisraiuorc
     port: 587
     debug: true
     properties:
@@ -45,8 +45,8 @@ application:
 
 smtp:
   server: ${SMTP_SERVER:smtp.gmail.com}
-  username: contact.dishome@gmail.com
-  password: dsuphdeopyvgdscr
+  username: contact.eatem@gmail.com
+  password: jcojdfaisraiuorc
   debug: true
 
 stripe:
