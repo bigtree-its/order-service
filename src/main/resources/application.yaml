@@ -2,7 +2,7 @@
 
 jasypt:
   encryptor:
-    password: projectbigtree
+    password: ${ORDERS_JASYPT_PASSWORD}
 
 server:
   port: 8082
@@ -12,13 +12,13 @@ auth:
 spring:
   data:
     mongodb:
-      uri: mongodb+srv://pichaiordersuser:fR7aMp9k1UAEH041@pichaiorders.gsurasg.mongodb.net/?retryWrites=true&w=majority&appName=PichaiOrders
-      database: db_pichai_orders
+      uri: ${ORDERS_DB_URI}
+      database: ${ORDERS_DB_NAME}
   mail:
     default-encoding: UTF-8
-    host: smtp.gmail.com
-    username: orders.zcoop@gmail.com
-    password: tpklvdcfbinywlsi 
+    host: ${SMTP_SERVER:smtp.gmail.com}
+    username: ${ORDERS_EMAIL}
+    password: ${ORDERS_EMAIL_PASSWORD} 
     port: 587
     debug: true
     properties:
@@ -45,15 +45,15 @@ application:
 
 smtp:
   server: ${SMTP_SERVER:smtp.gmail.com}
-  username: orders.zcoop@gmail.com
-  password: tpklvdcfbinywlsi
+  username: ${ORDERS_EMAIL}
+  password: ${ORDERS_EMAIL_PASSWORD}
   debug: true
 
 stripe:
   private:
-    key: ${STRIPE_SECRET_KEY:sk_test_51Nk2lYJtRMxkXWc3nCeNwbINNlGdHL1wwtxEBV9Iv5dNIr2oDuZ5DKxwvDSjZeK8BxoJUyx9yTHPy3k76G74Nrcm00S5L0HDHZ}
+    key: ${ORDERS_STRIPE_SECRET_KEY}
   success:
-    url: ${STRIPE_SUCCESS_URL:http://localhost:4200/checkout/success}
+    url: ${ORDERS_STRIPE_SUCCESS_URL}
   cancel:
-    url: ${STRIPE_CANCEL_URL:http://localhost:4200/checkout/failure}
-  currency: ${STRIPE_CURRENCY:gbp}
+    url: ${ORDERS_STRIPE_CANCEL_URL}
+  currency: ${ORDERS_STRIPE_CURRENCY:gbp}
