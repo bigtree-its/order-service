@@ -53,11 +53,10 @@
         }
 
         .banner {
-            height: 100px;
-            color: #FFE01B;
-            padding: 10px;
-            width: 600px;
-            margin: auto;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
         }
 
         .confirmation-summary {
@@ -156,7 +155,7 @@
 
 <body style="margin: 0 !important; padding: 0 !important;">
     <div class="main-body">
-        <div style="display:flex;flex-direction:row;align-items:center;">
+        <div class="banner">
             <img src="https://imagedelivery.net/AEAandXNB2C_FZ3VOFH8Dw/54846064-23ac-4f80-425c-4fc44f712200/public"
                 style="height:40px;width:30px;object-fit:contain;">
             <span style="font-weight: 900;font-size: 18px;">Ok Eat</span>
