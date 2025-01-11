@@ -65,7 +65,7 @@ public class EmailServiceTest {
     private static void godaddy(JavaMailSenderImpl mailSender) {
         mailSender.setHost("smtp.office365.com");
         mailSender.setPort(587);
-        mailSender.setUsername("support@eatem.co.uk");
+        mailSender.setUsername("support@okeat.co.uk");
         mailSender.setPassword("dflyxkjvtfypkssc");
 
         Properties javaMailProperties = new Properties();

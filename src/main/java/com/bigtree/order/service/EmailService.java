@@ -33,7 +33,7 @@ public class EmailService {
             helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
             helper.setTo(email.getTo());
             helper.setSubject(email.getSubject());
-            helper.setFrom("orders@zcoop.co.uk");
+            helper.setFrom("orders@okeat.co.uk");
             helper.setText(emailContentHelper.build("order", email.getParams()), true);
             javaMailSender.send(mimeMessage);
             log.info("Email sent to customer {}", email.getTo());
