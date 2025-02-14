@@ -49,7 +49,6 @@ public class DummyData {
                 .items(items)
                 .createdAt(LocalDateTime.now())
                 .expectedDeliveryDate(LocalDate.now())
-                .collectionDate(LocalDate.now())
                 .build();
         return order;
     }
